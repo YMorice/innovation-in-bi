@@ -834,6 +834,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = ''
+set statement_timeout = '60s'   -- le rôle authenticated est coupé à 8 s : trop court pour un long export
 as $$
 declare
   r jsonb;

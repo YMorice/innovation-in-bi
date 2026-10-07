@@ -989,9 +989,11 @@ async function ingest(fileList) {
 // ---------------------------------------------------------------- dépôt en base
 // File d'envoi : chaque fichier est lu par un worker (document, empreinte, copie
 // compressée), la copie part dans le bucket "exports", puis deposer_cycle l'intègre
-// et le journalise. Au plus SIMULTANES fichiers à la fois.
+// et le journalise. Au plus SIMULTANES fichiers à la fois : un seul, car chaque import
+// verrouille son boîtier, son moteur et sa tête jusqu'à la fin. En parallèle, les dépôts
+// s'attendent (« lock timeout » au bout de 8 s) et une petite base peut manquer de mémoire.
 const depot = {
-  SIMULTANES: 3,
+  SIMULTANES: 1,
   items: [], ignored: 0, running: 0, seq: 0, journalLoaded: false,
   add(files) {
     const ok = files.filter((f) => /\.xls$/i.test(f.name));
