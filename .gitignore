@@ -8,6 +8,7 @@
 !/netlify.toml
 !/.claude/
 !/app/
+!/site/
 !/supabase/
 !/scripts/
 !/donnees/
@@ -19,8 +20,11 @@
 !.env.example
 /.claude/settings.local.json
 
-# Généré au build Netlify (build-config.js)
+# Généré au build Netlify (build-config.js, Astro)
 /app/config.js
+/site/dist/
+/site/.astro/
+node_modules/
 
 # Données : l'export réel reste en local ; les synthétiques se régénèrent
 # avec scripts/generer_synthetiques.py (≈ 190 Mo).

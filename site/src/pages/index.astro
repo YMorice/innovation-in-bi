@@ -1,0 +1,55 @@
+---
+// Landing : vide pour l'instant, un seul bouton vers la page de connexion (l'app, /app/).
+---
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cycles de perçage</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%232a78d6'/%3E%3Cpath d='M6 17V11M10 17V7M14 17v-4M18 17V9' stroke='white' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E">
+<script is:inline>
+  // Liens des e-mails Supabase (invitation, réinitialisation) : ils mènent à la racine
+  // (Site URL). On les passe à l'app avec leur fragment, qui ouvre la session.
+  if (/(^|&)(access_token|error_description)=/.test(location.hash.slice(1)))
+    location.replace("/app/" + location.search + location.hash);
+</script>
+<style is:global>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --text: #0b0b0b;
+  --accent: #2a78d6;
+  --accent-ink: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --text: #ffffff; --accent: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --text: #ffffff; --accent: #3987e5;
+}
+html, body { margin: 0; }
+body {
+  background: var(--page); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+main { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 0 16px; }
+.primary {
+  background: var(--accent); color: var(--accent-ink); border-radius: 8px;
+  padding: 10px 20px; font-weight: 500; text-decoration: none;
+}
+.primary:hover { filter: brightness(1.08); }
+.primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="primary" href="/app/">Se connecter</a>
+</main>
+</body>
+</html>

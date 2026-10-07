@@ -1,0 +1,19 @@
+# Build du site, lancé à chaque push sur main (le netlify.toml racine fixe base = "site").
+# Netlify installe les dépendances (package.json), puis build-config.js écrit app/config.js
+# à partir des variables d'environnement Netlify (SUPABASE_URL, SUPABASE_KEY), et Astro
+# construit la landing et recopie l'app sous /app/. Seul dist/ est publié.
+[build]
+  command = "node ../app/build-config.js && npm run build"
+  publish = "dist"
+
+# L'URL et la clé publishable/anon sont publiques par nature : config.js les sert exprès.
+# Netlify les a marquées « secrètes » et bloquerait le build en les y trouvant.
+# Les autres variables (clé secrète…) restent recherchées dans les fichiers publiés.
+[build.environment]
+  NODE_VERSION = "22"
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,SUPABASE_KEY,SUPABASE_ANON_PUBLIC_KEY"
+
+[[headers]]
+  for = "/app/config.js"
+  [headers.values]
+    Cache-Control = "no-cache"

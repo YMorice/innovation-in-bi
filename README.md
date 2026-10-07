@@ -4,7 +4,8 @@ Stockage des exports de cycles de perçage dans Supabase, dépôt et tableaux de
 dans une seule page web.
 
 ```
-app/            → LE dossier publié par Netlify à chaque push (une seule page : index.html)
+site/           → le site publié par Netlify à chaque push (Astro) : landing à la racine, app sous /app/
+app/            → l'app (une seule page : index.html), recopiée dans le site au build
 supabase/       → base : schema_complet.sql (base neuve) et migrations/ (historique)
 scripts/        → outils en ligne de commande (import en masse, données synthétiques)
 donnees/        → fichier_ano.xls (export réel anonymisé) et synthetiques/ (600 cycles)
@@ -18,18 +19,22 @@ archives/       → ancienne plateforme Next.js (remplacée par app/), plus util
    migrations de `supabase/migrations/` pas encore appliquées, dans l'ordre.
 2. **Supabase > Authentication** :
    - Sign In / Providers : décocher « Allow new users to sign up » et « Allow anonymous sign-ins » ;
-   - URL Configuration : Site URL = l'adresse Netlify de la page (ex. `https://percage.netlify.app/`).
+   - URL Configuration : Site URL = l'adresse Netlify du site (ex. `https://percage.netlify.app/`).
+     Les liens des e-mails arrivent sur la landing, qui les passe à l'app (`/app/`).
 3. **Netlify > Site configuration > Environment variables** : `SUPABASE_URL` et
    `SUPABASE_KEY` (clé publishable ou anon, faite pour être publique : Supabase > Project
    Settings > API Keys). Jamais la clé secrète : le build la refuse.
 4. **Lier le site au dépôt GitHub** (une fois) : Netlify > Project configuration > Build &
    deploy > Continuous deployment > Manage repository > Link to a different repository >
    GitHub > `YMorice/innovation-in-bi`, branche `main`. Laisser vides Base directory, Build
-   command et Publish directory : le `netlify.toml` racine envoie le build dans `app/`.
+   command et Publish directory : le `netlify.toml` racine envoie le build dans `site/`.
 5. **Mettre à jour** : `git push` sur `main`, et c'est tout. Netlify lance le build
-   (`app/netlify.toml` → `build-config.js`, qui écrit `config.js` avec l'URL et la clé) et
-   publie `app/`. Plus de `netlify deploy` ni de glisser-déposer : le push suivant
-   écraserait ce déploiement manuel.
+   (`site/netlify.toml` : `build-config.js` écrit `config.js` avec l'URL et la clé, puis
+   Astro construit la landing et y recopie l'app sous `/app/`) et publie `site/dist/`.
+   Plus de `netlify deploy` ni de glisser-déposer : le push suivant écraserait ce
+   déploiement manuel.
+
+Voir le site en local : `cd site && npm install && npm run build && npm run preview`.
 
 ## Donner accès à quelqu'un
 
@@ -46,7 +51,7 @@ de l'e-mail, arrive sur la page, choisit son mot de passe. Mot de passe oublié 
 Retirer quelqu'un : `delete from public.utilisateur_autorise where email = '…';`
 (accès coupé immédiatement), puis supprimer l'utilisateur dans Authentication > Users.
 
-## La page (`app/index.html`)
+## La page (`app/index.html`, en ligne sous `/app/`)
 
 - **Dépôt** : fichiers `.xls` ou dossiers entiers. Chaque fichier est découpé dans le
   navigateur, sa copie compressée va dans le bucket privé `exports`, puis la fonction

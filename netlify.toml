@@ -1,5 +1,5 @@
 # Netlify (site lié au dépôt GitHub) : chaque push sur main republie le site.
-# Le build se fait dans app/ et suit app/netlify.toml (build-config.js → config.js).
+# Le build se fait dans site/ et suit site/netlify.toml (config.js, landing Astro, app sous /app/).
 # Sans cette ligne, Netlify publierait la racine du dépôt (CLAUDE.md, schéma, scripts…).
 [build]
-  base = "app"
+  base = "site"

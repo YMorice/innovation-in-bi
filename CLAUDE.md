@@ -10,16 +10,23 @@ le dossier interdit n'est jamais parcouru. Pour ajouter des fichiers, nommer les
 
 Mode d'emploi pour Yann : `README.md`.
 
-- `app/index.html` : **l'app unique, déployée sur Netlify** (site `desoutter`).
+- `site/` : **le site déployé sur Netlify** (site `desoutter`), projet Astro. La landing
+  (`src/pages/index.astro`, vide pour l'instant : un bouton « Se connecter ») est à la racine ;
+  l'app est servie sous `/app/`, recopiée telle quelle depuis `app/` à la fin du build
+  (`astro.config.mjs`, avec `config.js`). La landing renvoie vers `/app/` les liens des e-mails
+  Supabase (fragment `access_token` / `error_description`), qui mènent à la Site URL (racine).
+  Build Netlify (`site/netlify.toml`) : `node ../app/build-config.js && npm run build`, publie
+  `site/dist/`. En local : `cd site && npm install && npm run build && npm run preview`.
+- `app/index.html` : **l'app unique** (servie sous `/app/`, voir `site/`).
   Page statique : connexion Supabase Auth (connexion seule, pas d'inscription ; compte dans
   `utilisateur_autorise` ; liens d'invitation/réinitialisation → écran « Choisissez votre mot
   de passe »), onglet Dépôt (découpage dans le worker `IMPORT`, copie gzip dans le bucket
   `exports`, RPC `deposer_cycle`) et tableaux de bord lus en base (`v_cycle_resume`, mesures à
   la demande ; `base.summary()` produit les mêmes champs que `parse()` du worker). Projet
-  visé : `config.js`, généré au build Netlify (`netlify.toml` → `build-config.js`) depuis les
-  variables `SUPABASE_URL` / `SUPABASE_KEY` du site ; le build refuse une clé secrète.
+  visé : `config.js`, généré au build Netlify (`site/netlify.toml` → `build-config.js`) depuis
+  les variables `SUPABASE_URL` / `SUPABASE_KEY` du site ; le build refuse une clé secrète.
   Déploiement : **par Git uniquement**, chaque push sur `main` republie le site. Le
-  `netlify.toml` racine fixe `base = "app"` (sans lui, Netlify publierait la racine du
+  `netlify.toml` racine fixe `base = "site"` (sans lui, Netlify publierait la racine du
   dépôt). Ne plus lancer `netlify deploy` ni glisser-déposer : le push suivant l'écraserait.
 - `supabase/migrations/` : schéma (tables en `public`), `import_cycle`, accès sur invitation,
   vue de résumé, `deposer_cycle`. Appliquées à la main dans l'éditeur SQL : le réseau de Yann
