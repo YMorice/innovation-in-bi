@@ -13,7 +13,7 @@ Mode d'emploi pour Yann : `README.md`.
 - `site/` : **le site déployé sur Netlify** (site `desoutter`), projet Astro. La landing
   (`src/pages/index.astro`, vide pour l'instant : un bouton « Se connecter ») est à la racine ;
   l'app est servie sous `/app/`, recopiée telle quelle depuis `app/` à la fin du build
-  (`astro.config.mjs`, avec `config.js`). La landing renvoie vers `/app/` les liens des e-mails
+  (`astro.config.mjs` : `index.html`, `arion/` et `config.js`). La landing renvoie vers `/app/` les liens des e-mails
   Supabase (fragment `access_token` / `error_description`), qui mènent à la Site URL (racine).
   Build Netlify (`site/netlify.toml`) : `node ../app/build-config.js && npm run build`, publie
   `site/dist/`. En local : `cd site && npm install && npm run build && npm run preview`.
@@ -28,6 +28,15 @@ Mode d'emploi pour Yann : `README.md`.
   la demande ; `base.summary()` produit les mêmes champs que `parse()` du worker). Projet
   visé : `config.js`, généré au build Netlify (`site/netlify.toml` → `build-config.js`) depuis
   les variables `SUPABASE_URL` / `SUPABASE_KEY` du site ; le build refuse une clé secrète.
+  Apparence : design system **Arion** (artifact « Design System »,
+  https://claude.ai/artifact/2ZjW1vDtV25WkCECW6GnE5), posé dans `app/arion/` :
+  `tokens.css` (généré depuis son `tokens.json`), `bundle.css` et `bundle.js` (`window.Arion` :
+  icônes, marque, `Arion.plotly.layout()`), polices dans `fonts/`. Ces fichiers se remplacent
+  par ceux de l'artifact, sans retouche à la main ; l'app n'utilise que des `var(--…)` et ses
+  propres classes par-dessus. Thème clair par défaut, sombre au choix (`data-theme`).
+  Libellés : « Conforme » / « Anomalie » à l'écran pour `cycle_ok` OK / NOK (la base garde OK / NOK).
+  Dépôt en base **fermé** (`DEPOT_OUVERT = false`) : onglet, boutons et envoi des `.xls`
+  glissés masqués, le code reste en place ; les `.csv` à joindre restent acceptés.
   Déploiement : **par Git uniquement**, chaque push sur `main` republie le site. Le
   `netlify.toml` racine fixe `base = "site"` (sans lui, Netlify publierait la racine du
   dépôt). Ne plus lancer `netlify deploy` ni glisser-déposer : le push suivant l'écraserait.

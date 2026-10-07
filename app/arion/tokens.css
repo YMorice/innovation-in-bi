@@ -1,0 +1,152 @@
+/* Arion : jetons de couleur, typographie, espace, formes et mouvement.
+   Générés depuis tokens.json : ne pas modifier à la main.
+   Atelier (clair) par défaut, Scène (sombre) sur [data-theme="dark"]. Le thème ne suit pas
+   le système : il est toujours posé explicitement. */
+
+@font-face {
+  font-family: "Instrument Sans";
+  src: url("fonts/InstrumentSans-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-stretch: 75% 100%;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/JetBrainsMono-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --page: #f2f4f6;
+  --surface: #ffffff;
+  --surface-2: #e9edf0;
+  --text: #0e1216;
+  --text-2: #46505a;
+  --muted: #5f6974;
+  --grid: #e3e7eb;
+  --axis: #b6bfc8;
+  --border: #0e12161f;
+  --border-strong: #848e98;
+  --accent: #0e1216;
+  --accent-ink: #ffffff;
+  --band: #0e12160a;
+  --signal: #e45b3f;
+  --signal-ink: #bb3c21;
+  --signal-soft: #fdefeb;
+  --on-signal: #ffffff;
+  --good: #1a7f45;
+  --good-ink: #13663a;
+  --good-soft: #e5f3ea;
+  --warning: #d9970a;
+  --warning-ink: #835400;
+  --warning-soft: #fbf1d9;
+  --critical: var(--signal-ink);
+  --critical-soft: var(--signal-soft);
+  --s1: #2a78d6;
+  --s2: #1baf7a;
+  --s3: #eda100;
+  --s4: #4a3aa7;
+  --s5: #e87ba4;
+  --s6: #008300;
+  --s7: var(--muted);
+  --s8: var(--muted);
+  --sig-torque: var(--s1);
+  --sig-thrust: var(--s2);
+  --layer-cfrp: #0e12161a;
+  --layer-ti: #2a4a7a14;
+  --layer-al: #0e121608;
+  --hatch: #8a96a2;
+  --shadow-sm: 0 1px 2px #0e12161a;
+  --shadow-lg: 0 8px 24px -6px #0e121633, 0 2px 6px #0e12161a;
+  --focus-ring: 0 0 0 2px #f2f4f6, 0 0 0 4px #0e1216;
+  --glow: 0 0 0 4px #e45b3f2e, 0 0 24px #e45b3f59;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0a0d10;
+  --surface: #13171b;
+  --surface-2: #1b2026;
+  --text: #e9edf0;
+  --text-2: #a9b3bc;
+  --muted: #86919b;
+  --grid: #20262d;
+  --axis: #3b444d;
+  --border: #ffffff1a;
+  --border-strong: #66707a;
+  --accent: #e9edf0;
+  --accent-ink: #0a0d10;
+  --band: #ffffff0a;
+  --signal: #f0674a;
+  --signal-ink: #ff8f75;
+  --signal-soft: #3a1a12;
+  --on-signal: #0a0d10;
+  --good: #3fb874;
+  --good-ink: #6fd59a;
+  --good-soft: #10261a;
+  --warning: #e8b130;
+  --warning-ink: #f2c75e;
+  --warning-soft: #2d2410;
+  --critical: var(--signal-ink);
+  --critical-soft: var(--signal-soft);
+  --s1: #3987e5;
+  --s2: #199e70;
+  --s3: #c98500;
+  --s4: #9085e9;
+  --s5: #d55181;
+  --s6: #008300;
+  --s7: var(--muted);
+  --s8: var(--muted);
+  --sig-torque: var(--s1);
+  --sig-thrust: var(--s2);
+  --layer-cfrp: #ffffff1a;
+  --layer-ti: #8fb0e017;
+  --layer-al: #ffffff08;
+  --hatch: #4d5862;
+  --shadow-sm: 0 1px 2px #00000080;
+  --shadow-lg: 0 12px 32px -8px #000000b3, 0 2px 6px #00000080;
+  --focus-ring: 0 0 0 2px #0a0d10, 0 0 0 4px #e9edf0;
+  --glow: 0 0 0 4px #f0674a33, 0 0 28px #f0674a73;
+}
+
+:root {
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-full: 999px;
+  --dur-instant: 90ms;
+  --dur-fast: 160ms;
+  --dur-base: 240ms;
+  --dur-slow: 480ms;
+  --dur-scan: 1400ms;
+  --dur-draw: 1800ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-feed: linear;
+  --control-sm: 28px;
+  --control: 34px;
+  --header: 56px;
+  --chart-h: 320px;
+  --measure: 68ch;
+  --content: 1240px;
+}

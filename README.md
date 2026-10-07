@@ -53,7 +53,9 @@ Retirer quelqu'un : `delete from public.utilisateur_autorise where email = '…'
 
 ## La page (`app/index.html`, en ligne sous `/app/`)
 
-- **Dépôt** : fichiers `.xls` ou dossiers entiers. Chaque fichier est découpé dans le
+- **Dépôt** (fermé depuis le 7 octobre 2026 : toutes les données sont en base ; pour le
+  rouvrir, passer `DEPOT_OUVERT` à `true` dans `app/index.html` puis pousser) : fichiers
+  `.xls` ou dossiers entiers. Chaque fichier est découpé dans le
   navigateur, sa copie compressée va dans le bucket privé `exports`, puis la fonction
   `deposer_cycle` l'intègre en base et le note au journal. Un fichier déjà importé est
   reconnu. Déposer le **dossier de l'essai** (« DT00012 - acme foret Ø8.5 ») plutôt que

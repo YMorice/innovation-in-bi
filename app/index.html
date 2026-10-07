@@ -3,198 +3,250 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cycles de perçage</title>
-<meta name="description" content="Dépôt d'exports de cycles de perçage et tableaux de bord interactifs, traités entièrement dans le navigateur.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%232a78d6'/%3E%3Cpath d='M6 17V11M10 17V7M14 17v-4M18 17V9' stroke='white' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E">
+<title>Arion · Cycles de perçage</title>
+<meta name="description" content="Arion : dépôt d'exports de cycles de perçage et tableaux de bord interactifs. Projet étudiant Audencia, mené avec Desoutter Tools.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e1216'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23e9edf0' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4.6' fill='%23f0674a'/%3E%3C/svg%3E">
+<!-- Design system Arion (app/arion/, recopié par le build du site) : jetons, composants, window.Arion -->
+<link rel="preload" href="arion/fonts/InstrumentSans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="arion/tokens.css">
+<link rel="stylesheet" href="arion/bundle.css">
+<script>
+  // Thème posé avant le premier affichage : clair par défaut, sombre seulement s'il a été choisi.
+  try { if (JSON.parse(localStorage.getItem("percage.theme")) === "dark") document.documentElement.setAttribute("data-theme", "dark"); } catch {}
+</script>
+<script src="arion/bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js@2.35.2/dist/plotly-locale-fr.js"></script><!-- mois et menus en français -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script><!-- généré au build Netlify (build-config.js) -->
 
 <style>
-:root {
-  color-scheme: light;
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
-  --surface-2: #f3f2ee;
-  --text: #0b0b0b;
-  --text-2: #52514e;
-  --muted: #898781;
-  --grid: #e1e0d9;
-  --axis: #c3c2b7;
-  --border: rgba(11,11,11,0.10);
-  --accent: #2a78d6;
-  --accent-ink: #ffffff;
-  --band: rgba(11,11,11,0.035);
-  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
-  --s5: #e87ba4; --s6: #008300; --s7: #4a3aa7; --s8: #e34948;
-  --good: #0ca30c; --critical: #d03b3b; --good-ink: #006300;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --page: #0d0d0d; --surface: #1a1a19; --surface-2: #232321;
-    --text: #ffffff; --text-2: #c3c2b7; --muted: #898781;
-    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-    --accent: #3987e5; --band: rgba(255,255,255,0.04);
-    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
-    --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
-    --good-ink: #0ca30c;
-  }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --page: #0d0d0d; --surface: #1a1a19; --surface-2: #232321;
-  --text: #ffffff; --text-2: #c3c2b7; --muted: #898781;
-  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-  --accent: #3987e5; --band: rgba(255,255,255,0.04);
-  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
-  --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
-  --good-ink: #0ca30c;
-}
-* { box-sizing: border-box; }
+/* Couleurs, polices, espaces et rayons : jetons d'arion/tokens.css (var(--…)). */
 html, body { margin: 0; }
 body {
   background: var(--page); color: var(--text);
-  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
-  -webkit-font-smoothing: antialiased;
+  font-family: var(--font-sans); font-size: 14px; line-height: 21px;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
 }
 button, input, select { font: inherit; color: inherit; }
+/* Boutons (Button) : secondaire par défaut, .primary une fois par vue, .ghost pour les outils */
 button {
-  border: 1px solid var(--border); background: var(--surface); border-radius: 8px;
-  padding: 6px 12px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  height: var(--control); padding: 0 var(--space-4);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface);
+  font-weight: 600; white-space: nowrap; cursor: pointer;
+  transition: background var(--dur-instant) var(--ease-out), border-color var(--dur-instant) var(--ease-out);
 }
 button:hover { background: var(--surface-2); }
-button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
-button.primary:hover { filter: brightness(1.08); }
-button.ghost { border-color: transparent; background: transparent; padding: 4px 8px; color: var(--text-2); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.primary:hover { background: var(--text-2); border-color: var(--text-2); }
+button.ghost { border-color: transparent; background: transparent; padding: 0 var(--space-3); color: var(--text-2); font-weight: 500; }
 button.ghost:hover { background: var(--surface-2); color: var(--text); }
+button.icon { width: var(--control-sm); height: var(--control-sm); padding: 0; }
+button.square { width: var(--control); padding: 0; }
 button:disabled { opacity: .45; cursor: default; }
-select, input[type=date], input[type=text], input[type=search] {
-  border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 5px 8px;
-  max-width: 100%;
+/* Champs (Field) : étiquette en capitales au-dessus, contrôle à la hauteur control */
+select, input[type=date], input[type=text], input[type=search], input[type=email], input[type=password] {
+  height: var(--control); max-width: 100%; padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface);
 }
-label.field { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--text-2); }
+input::placeholder { color: var(--muted); }
+label.field {
+  display: flex; flex-direction: column; gap: var(--space-1);
+  font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  font-variation-settings: "wdth" 82; color: var(--muted);
+}
+label.field > select, label.field > input {
+  font-size: 14px; font-weight: 400; letter-spacing: normal; text-transform: none;
+  font-variation-settings: normal; color: var(--text);
+}
 
+/* Barre haute (TopBar) : marque, contexte, import en cours, actions */
 header.top {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--surface);
+  display: flex; align-items: center; gap: var(--space-2) var(--space-3); flex-wrap: wrap;
+  min-height: var(--header); padding: var(--space-2) 20px;
+  border-bottom: 1px solid var(--border); background: var(--surface);
   position: sticky; top: 0; z-index: 5;
 }
-header.top h1 { font-size: 16px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+header.top h1 { margin: 0; }
+header.top .context { display: flex; align-items: baseline; gap: var(--space-2); font-size: 13px; color: var(--text-2); }
+header.top .context::before { content: "/"; color: var(--axis); }
 header.top .spacer { flex: 1; }
-.status { font-size: 12px; color: var(--text-2); }
-.progress { width: 140px; height: 4px; background: var(--grid); border-radius: 2px; overflow: hidden; }
-.progress > div { height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+header.top button { height: var(--control-sm); padding: 0 var(--space-3); font-size: 13px; }
+header.top button.ghost { padding: 0 var(--space-2); }
+header.top button.icon { width: var(--control-sm); padding: 0; }
+.status { font-size: 13px; line-height: 19px; color: var(--text-2); }
+header.top .status { font-family: var(--font-mono); font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .02em; }
+.progress { width: 140px; height: 4px; background: var(--grid); border-radius: var(--radius-full); overflow: hidden; }
+.progress > div { height: 100%; width: 0; background: var(--accent); transition: width var(--dur-base) var(--ease-out); }
 
-nav.tabs { display: flex; gap: 4px; padding: 10px 20px 0; }
-nav.tabs button { border: none; background: none; border-radius: 8px 8px 0 0; padding: 8px 14px; color: var(--text-2); border-bottom: 2px solid transparent; }
-nav.tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
-
-.filters {
-  display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;
-  padding: 12px 20px; border-bottom: 1px solid var(--border);
+/* Onglets (Tabs) */
+nav.tabs { display: flex; gap: var(--space-1); padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--surface); overflow-x: auto; }
+nav.tabs button {
+  position: relative; height: 40px; padding: 0 var(--space-3); border: 0; border-radius: 0;
+  background: none; color: var(--text-2); font-weight: 500;
 }
-.filters label.field select { min-width: 110px; }
-.filters .active select { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+nav.tabs button:hover { background: none; color: var(--text); }
+nav.tabs button[aria-selected="true"] { color: var(--text); font-weight: 600; }
+nav.tabs button[aria-selected="true"]::after {
+  content: ""; position: absolute; left: var(--space-3); right: var(--space-3); bottom: -1px; height: 2px; background: var(--accent);
+}
 
-main { padding: 16px 20px 60px; }
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
-.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
-.kpi .lbl { font-size: 12px; color: var(--text-2); }
-.kpi .val { font-size: 24px; font-weight: 650; letter-spacing: -.02em; margin-top: 2px; }
-.kpi .sub { font-size: 12px; color: var(--muted); }
+/* Filtres (FilterBar) : un filtre posé prend le contour accent */
+.filters {
+  display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: flex-end;
+  padding: var(--space-3) 20px; border-bottom: 1px solid var(--border); background: var(--surface);
+}
+.filters label.field select { min-width: 120px; }
+.filters .active select, .filters .active input { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.filters .active select:focus-visible, .filters .active input:focus-visible { box-shadow: inset 0 0 0 1px var(--accent), var(--focus-ring); }
 
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 6px; min-width: 0; }
+main { padding: var(--space-4) 20px 60px; }
+/* Chiffres clés (KpiTile) : quatre au plus par rangée */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+@media (min-width: 1000px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.kpi {
+  display: grid; align-content: start; gap: var(--space-1); min-width: 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+}
+.kpi .lbl { font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-variation-settings: "wdth" 82; color: var(--muted); }
+.kpi .val { font-size: 30px; line-height: 34px; font-weight: 600; letter-spacing: -.02em; }
+.kpi .unit { margin-left: var(--space-1); font-family: var(--font-mono); font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--text-2); }
+.kpi .sub { font-size: 13px; line-height: 19px; color: var(--muted); }
+
+/* Graphiques (ChartTile) */
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); min-width: 0; }
 .tile.full { grid-column: 1 / -1; }
-.tile .head { display: flex; align-items: center; gap: 6px; }
-.tile .head h3 { font-size: 14px; font-weight: 600; margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tile .head .tools { display: flex; gap: 0; opacity: .55; }
+.tile .head { display: flex; align-items: center; gap: var(--space-2); }
+.tile .head h3 { font-size: 15px; line-height: 20px; font-weight: 600; margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile .head .tools { display: flex; gap: 2px; opacity: .6; transition: opacity var(--dur-fast) var(--ease-out); }
 .tile:hover .head .tools, .tile:focus-within .head .tools { opacity: 1; }
-.tile .desc { font-size: 12px; color: var(--muted); margin: 1px 0 2px; }
-.tile .plot { height: 320px; }
-.tile .empty { height: 320px; display: grid; place-items: center; color: var(--muted); font-size: 13px; text-align: center; padding: 20px; }
-.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.tile .desc { font-size: 13px; line-height: 19px; color: var(--muted); margin: 2px 0 var(--space-2); }
+.tile .plot { height: var(--chart-h); }
+.tile .empty { height: var(--chart-h); display: grid; place-items: center; color: var(--muted); font-size: 13px; text-align: center; padding: 20px; }
+.toolbar { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-3); }
 .toolbar .spacer { flex: 1; }
 
+/* Dépôt (DropZone) : contour en points ronds, comme une ligne de rivets */
 .drop {
-  border: 2px dashed var(--axis); border-radius: 16px; padding: 48px 24px; text-align: center;
+  display: grid; justify-items: center; gap: var(--space-2);
+  border: 2px dotted var(--border-strong); border-radius: var(--radius-lg); padding: var(--space-10) var(--space-6); text-align: center;
   background: var(--surface); max-width: 720px; margin: 40px auto;
 }
-.drop h2 { margin: 0 0 6px; font-size: 20px; }
-.drop p { color: var(--text-2); margin: 6px 0; }
-.drop .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
-.drop small { display: block; margin-top: 16px; color: var(--muted); }
+.drop > .ar-ico { width: 28px; height: 28px; color: var(--text-2); }
+.drop h2 { margin: var(--space-2) 0 0; font-size: 20px; line-height: 26px; font-weight: 600; letter-spacing: -.01em; }
+.drop p { color: var(--text-2); margin: 0; max-width: 60ch; }
+.drop .actions { display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap; margin-top: var(--space-3); }
+body.depot-ferme.dragging::after { content: "Déposez un .csv à joindre aux cycles"; }
 body.dragging::after {
-  content: "Déposez vos exports ici"; position: fixed; inset: 12px; border: 3px dashed var(--accent);
-  border-radius: 18px; background: color-mix(in srgb, var(--page) 85%, transparent);
-  display: grid; place-items: center; font-size: 22px; font-weight: 600; z-index: 50; pointer-events: none;
+  content: "Déposez vos exports ici"; position: fixed; inset: 12px; border: 2px dotted var(--accent);
+  border-radius: var(--radius-lg); background: color-mix(in srgb, var(--page) 85%, transparent);
+  display: grid; place-items: center; font-size: 20px; font-weight: 600; z-index: 50; pointer-events: none;
 }
 
-table.data { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
-table.data th, table.data td { padding: 6px 8px; border-bottom: 1px solid var(--grid); text-align: left; white-space: nowrap; }
-table.data th { font-weight: 600; color: var(--text-2); cursor: pointer; position: sticky; top: 0; background: var(--surface); user-select: none; }
+/* Écran sans données (EmptyState) */
+.ar-empty { margin: 40px auto; max-width: 720px; }
+
+/* Tableaux (DataTable) : en-têtes en capitales, nombres en mono à droite */
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 19px; font-variant-numeric: tabular-nums; }
+table.data th, table.data td { padding: 7px var(--space-3); border-bottom: 1px solid var(--grid); text-align: left; white-space: nowrap; }
+table.data th {
+  position: sticky; top: 0; z-index: 1; background: var(--surface); border-bottom-color: var(--border-strong);
+  font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  font-variation-settings: "wdth" 85; color: var(--muted); cursor: pointer; user-select: none;
+}
 table.data td.num, table.data th.num { text-align: right; }
-table.data tbody tr { cursor: pointer; }
+table.data td.num { font-family: var(--font-mono); font-size: 12.5px; }
+table.data th .unit { text-transform: none; letter-spacing: 0; }
+table.data tbody tr { cursor: pointer; transition: background var(--dur-instant) var(--ease-out); }
 table.data tbody tr:hover { background: var(--surface-2); }
-.tablewrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: auto; max-height: 70vh; }
+table.data tbody tr:last-child td { border-bottom: 0; }
+.tablewrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: auto; max-height: 70vh; }
 
-.badge { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
-.badge.ok { color: var(--good-ink); }
-.badge.nok { color: var(--critical); }
-.badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+/* États (StatusBadge) : toujours l'icône et le mot */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px 0 6px;
+  border-radius: var(--radius-sm); font-size: 12px; line-height: 1; font-weight: 600; white-space: nowrap;
+}
+.badge .ar-ico { width: 14px; height: 14px; stroke-width: 2; }
+.badge.ok { background: var(--good-soft); color: var(--good-ink); }
+.badge.nok { background: var(--critical-soft); color: var(--critical); }
 
-.detail-top { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
+.detail-top { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: flex-end; margin-bottom: var(--space-3); }
 .detail-top input[type=search] { min-width: 320px; }
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
-.facts > div > span { display: block; font-size: 12px; color: var(--text-2); }
-.facts div b { font-weight: 600; overflow-wrap: anywhere; }
-.chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 2px 4px 2px 10px; background: var(--surface); font-size: 12px; }
-.chip .sw { width: 10px; height: 3px; border-radius: 2px; }
-.chip button { border: none; padding: 0 6px; background: none; }
-.notice { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 10px 12px; color: var(--text-2); margin-bottom: 12px; }
-details.errors { margin-top: 12px; font-size: 12px; color: var(--text-2); }
+/* Fiche du cycle (Facts) */
+.facts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--space-3) var(--space-4);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-3);
+}
+.facts > div { min-width: 0; }
+.facts > div > span { display: block; font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-variation-settings: "wdth" 82; color: var(--muted); }
+.facts div b { display: block; margin-top: 3px; font-weight: 600; overflow-wrap: anywhere; }
+/* Cycles comparés (puces) */
+.chips { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 4px 0 10px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-full); background: var(--surface); font-size: 12px;
+}
+.chip .sw { width: 12px; height: 3px; border-radius: 2px; }
+.chip button { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--text-2); }
+.chip button:hover { background: var(--surface-2); color: var(--text); }
+.chip button .ar-ico { width: 12px; height: 12px; }
+/* Encart (Notice) : le fond porte l'information, pas de liseré */
+.notice { background: var(--surface-2); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); color: var(--text-2); font-size: 13px; line-height: 19px; margin-bottom: var(--space-3); }
+details.errors { margin-top: var(--space-3); font-size: 12px; color: var(--text-2); }
 details.errors li { overflow-wrap: anywhere; }
 
-dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--text); padding: 0; width: min(520px, calc(100vw - 32px)); }
+dialog {
+  border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); color: var(--text);
+  padding: 0; width: min(520px, calc(100vw - 32px)); box-shadow: var(--shadow-lg);
+}
 dialog::backdrop { background: rgba(0,0,0,.35); }
-dialog form { padding: 18px; display: grid; gap: 12px; }
-dialog h2 { margin: 0; font-size: 16px; }
-dialog .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-dialog .hint { font-size: 12px; color: var(--muted); margin: -4px 0 0; }
-dialog menu { display: flex; justify-content: flex-end; gap: 8px; margin: 4px 0 0; padding: 0; }
+dialog form { padding: var(--space-5); display: grid; gap: var(--space-3); }
+dialog h2 { margin: 0; font-size: 20px; line-height: 26px; font-weight: 600; letter-spacing: -.01em; }
+dialog .row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+dialog .hint { font-size: 12px; line-height: 16px; color: var(--muted); margin: -4px 0 0; }
+dialog menu { display: flex; justify-content: flex-end; gap: var(--space-2); margin: var(--space-1) 0 0; padding: 0; }
 
-.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--page); padding: 8px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
-.toast.show { opacity: 1; }
+/* Confirmation (Toast) */
+.toast {
+  position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translate(-50%, 8px);
+  display: flex; align-items: center; min-height: 40px; max-width: calc(100vw - 32px); padding: var(--space-2) var(--space-4);
+  background: var(--accent); color: var(--accent-ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  font-size: 13px; line-height: 19px; opacity: 0; pointer-events: none; z-index: 60;
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
 [hidden] { display: none !important; }
 
 /* connexion : tant que la session n'est pas validée, seul l'écran de connexion est visible */
 body.locked > :not(#auth):not(.toast) { display: none !important; }
 body:not(.locked) #auth { display: none; }
-#auth { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+#auth { min-height: 100vh; display: grid; place-items: center; align-content: center; gap: var(--space-4); padding: 24px 16px; }
 .auth-card {
-  width: min(380px, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-  padding: 24px; display: grid; gap: 14px;
+  width: min(380px, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: var(--space-6); display: grid; gap: var(--space-4);
 }
-.auth-card h1 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
+.auth-card h1 { margin: 0; font-size: 20px; line-height: 26px; font-weight: 600; letter-spacing: -.01em; }
+.auth-card .ar-wordmark { margin-bottom: var(--space-1); }
 .auth-card p { margin: 0; color: var(--text-2); }
-.auth-card label.field { font-size: 13px; }
-.auth-card input { border: 1px solid var(--border); background: var(--page); border-radius: 8px; padding: 8px 10px; }
-.auth-card button.primary { padding: 9px 12px; }
 .auth-card .err { color: var(--critical); font-size: 13px; }
-.auth-card small { color: var(--muted); font-size: 12px; }
-.progress.wide { width: 100%; margin: 0 0 12px; }
-.section-title { font-size: 14px; margin: 20px 0 8px; }
-#tab-depot .drop { margin: 8px auto 20px; }
+.auth-card small { color: var(--muted); font-size: 12px; line-height: 16px; }
+#auth .mention { margin: 0; max-width: 380px; text-align: center; font-size: 12px; line-height: 16px; color: var(--muted); }
+.progress.wide { width: 100%; margin: 0 0 var(--space-3); }
+.section-title { font-size: 15px; line-height: 20px; font-weight: 600; margin: var(--space-5) 0 var(--space-2); }
+#tab-depot .drop { margin: var(--space-2) auto var(--space-5); }
 table.data.depot tbody tr, #journal tbody tr { cursor: default; }
 table.data.depot td.msg, #journal td.msg { white-space: normal; color: var(--text-2); min-width: 240px; }
 .etat { font-weight: 600; }
 .etat.importé { color: var(--good-ink); }
 .etat.erreur { color: var(--critical); }
 .etat.doublon, .etat.attente { color: var(--muted); }
-.etat.envoi { color: var(--accent); }
-header.top .who { font-size: 12px; color: var(--text-2); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.etat.envoi { color: var(--text-2); }
+header.top .who { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1599px) { header.top .who { display: none; } }   /* l'adresse reste dans l'info-bulle de « Se déconnecter » */
 
 @media (max-width: 760px) {
   header.top, .filters, main, nav.tabs { padding-left: 16px; padding-right: 16px; }
@@ -208,6 +260,7 @@ header.top .who { font-size: 12px; color: var(--text-2); max-width: 220px; overf
 <body class="locked">
 <section id="auth">
   <form class="auth-card" id="auth-form">
+    <span class="ar-wordmark" data-mark>Arion</span>
     <h1>Cycles de perçage</h1>
     <p id="auth-intro">Connectez-vous pour accéder aux données.</p>
     <label class="field">E-mail <input type="email" name="email" autocomplete="email" required></label>
@@ -226,44 +279,55 @@ header.top .who { font-size: 12px; color: var(--text-2); max-width: 220px; overf
     <p class="err" id="pwd-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="pwd-submit">Enregistrer et continuer</button>
   </form>
+  <p class="mention">Projet étudiant Audencia, mené avec Desoutter Tools</p>
 </section>
 
 <header class="top">
-  <h1>Cycles de perçage</h1>
+  <h1 class="ar-wordmark" data-mark>Arion</h1>
+  <span class="context">Cycles de perçage</span>
   <span class="status" id="status"></span>
   <div class="progress" id="progress" hidden><div></div></div>
   <span class="spacer"></span>
-  <button id="btn-add-files" class="primary">Déposer des fichiers</button>
-  <button id="btn-add-folder">Un dossier</button>
-  <button id="btn-export" title="Exporter les cycles filtrés (CSV, format Excel français)">Exporter CSV</button>
+  <button id="btn-add-files" data-depot data-ico="upload">Déposer des fichiers</button>
+  <button id="btn-add-folder" data-depot>Un dossier</button>
+  <button id="btn-export" data-ico="download" title="Exporter les cycles filtrés (CSV, format Excel français)">Exporter en CSV</button>
   <button id="btn-clear" class="ghost" title="Oublier toutes les données chargées">Vider</button>
   <button id="btn-reload-db" class="ghost" title="Relire les cycles enregistrés en base">Recharger la base</button>
-  <button id="btn-theme" class="ghost" title="Thème">◐</button>
+  <button id="btn-theme" class="ghost icon"></button>
   <span class="who" id="who"></span>
   <button id="btn-logout" class="ghost">Se déconnecter</button>
   <input type="file" id="in-files" multiple accept=".xls,.txt,.tsv,.csv" hidden>
   <input type="file" id="in-folder" webkitdirectory multiple hidden>
 </header>
 
-<nav class="tabs" id="tabs" hidden>
-  <button data-tab="dash" aria-selected="true">Tableau de bord</button>
-  <button data-tab="cycle">Cycle</button>
-  <button data-tab="data">Données</button>
-  <button data-tab="depot">Dépôt</button>
+<nav class="tabs" id="tabs" role="tablist" aria-label="Sections" hidden>
+  <button role="tab" data-tab="dash" aria-selected="true">Tableau de bord</button>
+  <button role="tab" data-tab="cycle" aria-selected="false">Cycle</button>
+  <button role="tab" data-tab="data" aria-selected="false">Données</button>
+  <button role="tab" data-tab="depot" data-depot aria-selected="false">Dépôt</button>
 </nav>
 <div class="filters" id="filters" hidden></div>
 
 <main>
   <section id="empty" hidden>
-    <div class="drop">
-      <h2>Aucun cycle en base pour l'instant</h2>
-      <p>Déposez des exports <b>.xls</b> dans l'onglet Dépôt : ils seront intégrés en base puis affichés ici.</p>
-      <div class="actions"><button class="primary" data-goto="depot">Aller au dépôt</button></div>
+    <div class="ar-empty">
+      <!-- une rangée de trous, les deux derniers pas encore percés -->
+      <svg class="ar-empty__art" viewBox="0 0 120 40" aria-hidden="true">
+        <circle cx="12" cy="20" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="36" cy="20" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="60" cy="20" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="84" cy="20" r="7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <circle cx="108" cy="20" r="7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/>
+      </svg>
+      <h3 class="ar-empty__title">Aucun cycle en base pour l'instant</h3>
+      <p data-depot>Déposez des exports <b>.xls</b> dans l'onglet Dépôt : ils seront intégrés en base puis affichés ici.</p>
+      <p data-depot-ferme hidden>Aucun cycle n'a pu être lu pour ce compte. Relancez la lecture avec « Recharger la base ».</p>
+      <button class="primary" data-depot data-goto="depot" style="margin-top:var(--space-3)">Aller au dépôt</button>
     </div>
   </section>
 
   <section id="tab-depot" hidden>
-    <div class="drop">
+    <div class="drop" data-ico="upload">
       <h2>Déposer des exports en base</h2>
       <p>Glissez ici des fichiers <b>.xls</b> exportés par les boîtiers de perçage, ou un dossier entier.
         Chaque fichier est lu dans votre navigateur puis intégré en base ; un fichier déjà importé est reconnu et ignoré.</p>
@@ -294,7 +358,7 @@ header.top .who { font-size: 12px; color: var(--text-2); max-width: 220px; overf
   <section id="tab-dash" hidden>
     <div class="kpis" id="kpis"></div>
     <div class="toolbar">
-      <button class="primary" id="btn-new-tile">+ Graphique</button>
+      <button class="primary" id="btn-new-tile" data-ico="plus">Ajouter un graphique</button>
       <span class="spacer"></span>
       <button class="ghost" id="btn-dash-export" title="Enregistrer la disposition dans un fichier JSON">Exporter la disposition</button>
       <button class="ghost" id="btn-dash-import">Importer</button>
@@ -310,9 +374,9 @@ header.top .who { font-size: 12px; color: var(--text-2); max-width: 220px; overf
         <input type="search" id="cycle-search" list="cycle-list" placeholder="Nom de fichier…">
       </label>
       <datalist id="cycle-list"></datalist>
-      <button id="cycle-prev" title="Cycle précédent dans la sélection">←</button>
-      <button id="cycle-next" title="Cycle suivant dans la sélection">→</button>
-      <button id="cycle-compare" title="Superposer un autre cycle (3 au maximum)">+ Comparer</button>
+      <button id="cycle-prev" class="square" data-ico="arrow-left" title="Cycle précédent dans la sélection" aria-label="Cycle précédent"></button>
+      <button id="cycle-next" class="square" data-ico="arrow-right" title="Cycle suivant dans la sélection" aria-label="Cycle suivant"></button>
+      <button id="cycle-compare" data-ico="plus" title="Superposer un autre cycle (3 au maximum)">Comparer</button>
       <label class="field">Axe horizontal
         <select id="cycle-x"><option value="t">Temps (s)</option><option value="pos">Position (mm)</option></select>
       </label>
@@ -360,7 +424,7 @@ header.top .who { font-size: 12px; color: var(--text-2); max-width: 220px; overf
           <option value="sum">Somme</option>
           <option value="min">Minimum</option>
           <option value="max">Maximum</option>
-          <option value="pct_nok">% de cycles NOK</option>
+          <option value="pct_nok">% de cycles en anomalie</option>
         </select>
       </label>
       <label class="field" data-role="color">Couleur par <select name="color"></select></label>
@@ -373,7 +437,7 @@ header.top .who { font-size: 12px; color: var(--text-2); max-width: 220px; overf
   </form>
 </dialog>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Lecture d'un export dans un worker. IMPORT : même découpage que scripts/charger_cycles.py. -->
 <script type="text/plain" id="worker-src">
@@ -854,8 +918,25 @@ const nf = (v, d = 2) => v == null || Number.isNaN(v) ? "—" : Number(v).toLoca
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 function toast(msg) {
   const t = $("#toast"); t.textContent = msg; t.classList.add("show");
-  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 2200);
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 5000);
 }
+// Icônes Lucide : celles du design system (Arion.icon) et quelques-unes de la même famille.
+const ICONES = {
+  pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+  "arrow-up": '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+  "arrow-down": '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
+  "arrow-left": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  "move-horizontal": '<path d="m18 8 4 4-4 4"/><path d="M2 12h20"/><path d="m6 8-4 4 4 4"/>',
+  copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+};
+const ico = (n) => ICONES[n] ? '<svg class="ar-ico" viewBox="0 0 24 24" aria-hidden="true">' + ICONES[n] + "</svg>" : Arion.icon(n);
+// Résultat d'un cycle : toujours l'icône et le mot (les valeurs en base restent OK / NOK).
+const statut = (v) => v === "OK" ? '<span class="badge ok">' + ico("circle-check") + "Conforme</span>"
+  : v === "NOK" ? '<span class="badge nok">' + ico("octagon-x") + "Anomalie</span>" : "—";
+const RESULTAT = { OK: "✓ Conforme", NOK: "✕ Anomalie" };
 const store = {
   get(k, d) { try { const v = localStorage.getItem("percage." + k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem("percage." + k, JSON.stringify(v)); } catch {} },
@@ -996,10 +1077,14 @@ async function ingest(fileList) {
     toast(joined + " ligne(s) jointe(s) depuis " + csvs.map((f) => f.name).join(", "));
     refresh();
   }
+  if (exps.length && !DEPOT_OUVERT) { toast("Le dépôt en base est fermé : " + exps.length + " fichier(s) ignoré(s)."); return; }
   if (exps.length) { depot.add(exps); setTab("depot"); }
 }
 
 // ---------------------------------------------------------------- dépôt en base
+// Fermé : toutes les données sont en base. L'onglet Dépôt, les boutons de dépôt et l'envoi
+// des .xls glissés sont masqués ; les .csv à joindre restent acceptés. true pour le rouvrir.
+const DEPOT_OUVERT = false;
 // File d'envoi : chaque fichier est lu par un worker (document, empreinte, copie
 // compressée), la copie part dans le bucket "exports", puis deposer_cycle l'intègre
 // et le journalise. Au plus SIMULTANES fichiers à la fois : un seul, car chaque import
@@ -1162,12 +1247,19 @@ function applyFilters() {
 }
 
 // ---------------------------------------------------------------- couleurs
-function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+// Jeton Arion lu au moment de l'appel ; « #rrggbbaa » passé en rgba() pour Plotly.
+function css(name) {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(v);
+  return m ? "rgba(" + [1, 2, 3].map((i) => parseInt(m[i], 16)).join(",") + "," + (parseInt(m[4], 16) / 255).toFixed(3) + ")" : v;
+}
+// Six séries au plus (s1 à s6, jamais recyclées) : au-delà, « Autres » en muted.
 function theme() {
   return {
     surface: css("--surface"), text: css("--text"), text2: css("--text-2"), muted: css("--muted"),
     grid: css("--grid"), axis: css("--axis"), border: css("--border"), band: css("--band"),
-    series: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => css("--s" + i)), good: css("--good"), critical: css("--critical"),
+    series: [1, 2, 3, 4, 5, 6].map((i) => css("--s" + i)), good: css("--good"), critical: css("--critical"),
+    torque: css("--sig-torque"), thrust: css("--sig-thrust"),
   };
 }
 // La couleur suit l'entité : calculée sur toutes les données chargées, pas sur la sélection filtrée.
@@ -1179,8 +1271,8 @@ function colorMap(field) {
   let keys = [...counts.keys()];
   const other = "Autres";
   let folded = new Set();
-  if (keys.length > 8) {
-    const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 7).map((e) => e[0]);
+  if (keys.length > 6) {
+    const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map((e) => e[0]);
     folded = new Set(keys.filter((k) => !top.includes(k)));
     keys = top;
   }
@@ -1191,7 +1283,7 @@ function colorMap(field) {
   const m = {
     order: keys, color: (k) => colors.get(k) || T.muted,
     fold: (v) => { v = v ?? "(vide)"; return folded.has(v) ? other : v; },
-    name: (k) => field === "cycle_ok" ? (k === "OK" ? "✓ OK" : k === "NOK" ? "✕ NOK" : String(k)) : String(k),
+    name: (k) => field === "cycle_ok" ? RESULTAT[k] ?? String(k) : String(k),
   };
   S.colorMaps[field] = m;
   return m;
@@ -1214,24 +1306,16 @@ function aggregate(rows, agg, y) {
   if (agg === "median") { v.sort((a, b) => a - b); const m = v.length >> 1; return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2; }
   return null;
 }
-const AGG_LABEL = { count: "Nombre de cycles", pct_nok: "% de cycles NOK", mean: "Moyenne", median: "Médiane", sum: "Somme", min: "Minimum", max: "Maximum" };
+const AGG_LABEL = { count: "Nombre de cycles", pct_nok: "% de cycles en anomalie", mean: "Moyenne", median: "Médiane", sum: "Somme", min: "Minimum", max: "Maximum" };
 const yTitle = (t) => t.agg === "count" || t.agg === "pct_nok" ? AGG_LABEL[t.agg] : AGG_LABEL[t.agg] + " · " + label(t.y);
 
 // ---------------------------------------------------------------- Plotly
+// Mise en forme Arion : polices, graduations en mono, séparateurs français (« 12,4 », « 1 248 »).
 function baseLayout(extra = {}) {
   const T = theme();
-  const ax = () => ({ gridcolor: T.grid, linecolor: T.axis, zeroline: false, tickfont: { color: T.muted, size: 11 }, title: { text: "", font: { color: T.text2, size: 12 } }, automargin: true });
-  return Object.assign({
-    paper_bgcolor: T.surface, plot_bgcolor: T.surface,
-    font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: T.text2, size: 12 },
-    margin: { l: 52, r: 12, t: 30, b: 44 },
-    xaxis: ax(), yaxis: ax(),
-    legend: { orientation: "h", x: 0, y: 1.02, yanchor: "bottom", font: { color: T.text2, size: 12 }, bgcolor: "rgba(0,0,0,0)" },
-    hoverlabel: { bgcolor: T.surface, bordercolor: T.axis, font: { color: T.text, size: 12 } },
-    bargap: 0.18,
-  }, extra);
+  return Arion.plotly.layout(Object.assign({ paper_bgcolor: T.surface, plot_bgcolor: T.surface, bargap: 0.18 }, extra));
 }
-const PCONF = { displaylogo: false, responsive: true, modeBarButtonsToRemove: ["select2d", "lasso2d", "autoScale2d", "toggleSpikelines"] };
+const PCONF = { ...Arion.plotly.config, locale: "fr" };
 
 // ---------------------------------------------------------------- tuiles
 const DEFAULT_TILES = [
@@ -1239,7 +1323,7 @@ const DEFAULT_TILES = [
   { title: "Usure : couple max selon le compteur outil", type: "scatter", x: "head_local_counter_1", y: "couple_max_a", color: "programme", width: "half" },
   { title: "Couple max par tête", type: "box", x: "head_name", y: "couple_max_a", width: "half" },
   { title: "Distribution du temps de cycle", type: "hist", x: "cycle_time_s", color: "pset_nb", width: "half" },
-  { title: "Taux de NOK par tête", type: "bar", x: "head_name", agg: "pct_nok", width: "half" },
+  { title: "Taux d'anomalies par tête", type: "bar", x: "head_name", agg: "pct_nok", width: "half" },
   { title: "Couple moyen par jour et par boîtier", type: "line", x: "jour", y: "couple_moy_a", agg: "mean", color: "box_sn", width: "full" },
 ];
 function tileDesc(t) {
@@ -1351,18 +1435,15 @@ function renderDash() {
   const grid = $("#grid");
   grid.querySelectorAll(".plot").forEach((el) => Plotly.purge(el));
   grid.innerHTML = "";
-  if (!S.tiles.length) grid.innerHTML = '<div class="notice" style="grid-column:1/-1">Aucun graphique. Ajoutez-en un avec « + Graphique ».</div>';
+  if (!S.tiles.length) grid.innerHTML = '<div class="notice" style="grid-column:1/-1">Aucun graphique. Ajoutez-en un avec « Ajouter un graphique ».</div>';
+  const outil = (a, icone, titre) => '<button class="ghost icon" data-a="' + a + '" title="' + titre + '" aria-label="' + titre + '">' + ico(icone) + "</button>";
   S.tiles.forEach((t, i) => {
     const card = document.createElement("article");
     card.className = "tile" + (t.width === "full" ? " full" : "");
     card.innerHTML = '<div class="head"><h3></h3><div class="tools">' +
-      '<button class="ghost" data-a="edit" title="Modifier">✎</button>' +
-      '<button class="ghost" data-a="up" title="Monter">↑</button>' +
-      '<button class="ghost" data-a="down" title="Descendre">↓</button>' +
-      '<button class="ghost" data-a="width" title="Largeur">⇔</button>' +
-      '<button class="ghost" data-a="dup" title="Dupliquer">⧉</button>' +
-      '<button class="ghost" data-a="del" title="Supprimer">✕</button></div></div>' +
-      '<div class="desc"></div><div class="plot"></div>';
+      outil("edit", "pencil", "Modifier") + outil("up", "arrow-up", "Monter") + outil("down", "arrow-down", "Descendre") +
+      outil("width", "move-horizontal", "Largeur") + outil("dup", "copy", "Dupliquer") + outil("del", "x", "Supprimer") +
+      '</div></div><div class="desc"></div><div class="plot"></div>';
     $("h3", card).textContent = t.title;
     $(".desc", card).textContent = tileDesc(t);
     card.addEventListener("click", (e) => {
@@ -1443,11 +1524,16 @@ function renderKpis() {
   const med = (k) => aggregate(rows, "median", k);
   const days = rows.map((r) => r.jour).filter(Boolean);
   const fmtDay = (d) => d ? new Date(d + "T00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "2-digit" }) : "—";
+  // unité en mono à côté du chiffre (KpiTile)
+  const u = (v, unit) => v == null ? "—" : nf(v, unit === "A" ? 2 : 1) + '<span class="unit">' + unit + "</span>";
+  const nok = judged.length - ok;
   const k = [
     ["Cycles", nf(rows.length, 0), rows.length === all ? "tous les cycles chargés" : "sur " + nf(all, 0) + " chargés"],
-    ["Cycles OK", pct == null ? "—" : nf(pct, 1) + " %", '<span class="badge nok"><span class="dot"></span>' + nf(judged.length - ok, 0) + " NOK</span>"],
-    ["Temps de cycle médian", nf(med("cycle_time_s"), 1) + " s", ""],
-    ["Couple max médian", nf(med("couple_max_a"), 2) + " A", ""],
+    ["Cycles conformes", pct == null ? "—" : u(pct, "%"), !judged.length ? "" : nok
+      ? '<span class="badge nok">' + ico("octagon-x") + nf(nok, 0) + (nok > 1 ? " anomalies" : " anomalie") + "</span>"
+      : '<span class="badge ok">' + ico("circle-check") + "Aucune anomalie</span>"],
+    ["Temps de cycle médian", u(med("cycle_time_s"), "s"), ""],
+    ["Couple max médian", u(med("couple_max_a"), "A"), ""],
     ["Têtes · boîtiers", new Set(rows.map((r) => r.head_uid)).size + " · " + new Set(rows.map((r) => r.box_sn)).size, ""],
     ["Période", days.length ? fmtDay(days[0]) : "—", days.length ? "au " + fmtDay(days[days.length - 1]) : ""],
   ];
@@ -1465,7 +1551,7 @@ function renderFilters() {
     const cur = S.filters[f.key] ?? "";
     const vals = [...f.values.keys()].map(String).sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
     html.push('<label class="field' + (cur ? " active" : "") + '">' + esc(f.label) + '<select data-f="' + esc(f.key) + '"><option value="">Tous</option>' +
-      vals.map((v) => '<option' + (v === cur ? " selected" : "") + ' value="' + esc(v) + '">' + esc(f.key === "cycle_ok" ? (v === "OK" ? "✓ OK" : "✕ NOK") : v) + "</option>").join("") + "</select></label>");
+      vals.map((v) => '<option' + (v === cur ? " selected" : "") + ' value="' + esc(v) + '">' + esc(f.key === "cycle_ok" ? RESULTAT[v] ?? v : v) + "</option>").join("") + "</select></label>");
   }
   const any = S.dateFrom || S.dateTo || Object.values(S.filters).some(Boolean);
   if (any) html.push('<button class="ghost" id="btn-reset-filters">Réinitialiser les filtres</button>');
@@ -1495,13 +1581,15 @@ function renderTable() {
   const shown = rows.slice(0, 500);
   $("#data-count").textContent = nf(rows.length, 0) + " cycle(s)" + (rows.length > 500 ? " · 500 premiers affichés, tout est dans l'export CSV" : "") + " · cliquez une ligne pour ouvrir le cycle";
   const isNum = (k) => S.fields[k]?.kind === "num";
+  // en-tête en capitales, unité après un point médian et gardée telle quelle (« s », pas « S »)
+  const thLabel = (k) => esc(label(k)).replace(/ \((A|s|mm|W|kJ)\)$/, ' · <span class="unit">$1</span>');
   const cell = (r, k) => {
     const v = r[k];
-    if (k === "cycle_ok") return v === "OK" ? '<span class="badge ok"><span class="dot"></span>OK</span>' : v === "NOK" ? '<span class="badge nok"><span class="dot"></span>NOK</span>' : "—";
+    if (k === "cycle_ok") return statut(v);
     if (k === "started_at") return esc(v?.replace("T", " "));
     return isNum(k) ? nf(v, 3) : esc(v ?? "—");
   };
-  $("#table").innerHTML = "<thead><tr>" + cols.map((k) => '<th data-k="' + k + '" class="' + (isNum(k) ? "num" : "") + '">' + esc(label(k)) + (k === sort ? (dir > 0 ? " ↑" : " ↓") : "") + "</th>").join("") + "</tr></thead><tbody>" +
+  $("#table").innerHTML = "<thead><tr>" + cols.map((k) => '<th data-k="' + k + '" class="' + (isNum(k) ? "num" : "") + '">' + thLabel(k) + (k === sort ? (dir > 0 ? " ↑" : " ↓") : "") + "</th>").join("") + "</tr></thead><tbody>" +
     shown.map((r) => '<tr data-key="' + esc(r.key) + '">' + cols.map((k) => '<td class="' + (isNum(k) ? "num" : "") + '">' + cell(r, k) + "</td>").join("") + "</tr>").join("") + "</tbody>";
 }
 $("#table").addEventListener("click", (e) => {
@@ -1544,11 +1632,11 @@ async function renderDetail() {
   $("#cycle-search").placeholder = comparing ? "Cycle à superposer…" : "Nom de fichier…";
   $("#cycle-chips").innerHTML = S.detail.length > 1 ? S.detail.map((k, i) =>
     '<span class="chip"><span class="sw" style="background:' + T.series[i] + '"></span>' + esc(S.cycles.get(k).source_file) +
-    (i ? '<button data-rm="' + esc(k) + '" title="Retirer">✕</button>' : "") + "</span>").join("") : "";
+    (i ? '<button data-rm="' + esc(k) + '" title="Retirer" aria-label="Retirer ' + esc(S.cycles.get(k).source_file) + '">' + ico("x") + "</button>" : "") + "</span>").join("") : "";
   if (!main) { body.innerHTML = '<div class="notice">Aucun cycle sélectionné.</div>'; return; }
   const row = S.rows.find((r) => r.key === main.key) || main;
   const facts = [
-    ["Date", row.started_at?.replace("T", " ")], ["Résultat", row.cycle_ok === "OK" ? '<span class="badge ok"><span class="dot"></span>OK</span>' : row.cycle_ok === "NOK" ? '<span class="badge nok"><span class="dot"></span>NOK</span>' : "—"],
+    ["Date", row.started_at?.replace("T", " ")], ["Résultat", statut(row.cycle_ok)],
     ["Tête", esc(row.head_name) + " · " + esc(row.head_uid)], ["Boîtier", esc(row.box_sn)], ["Programme", esc(row.programme)],
     ["Temps de cycle", nf(row.cycle_time_s, 2) + " s"], ["Distance", nf(row.distance_mm, 2) + " mm"],
     ["Compteur local 1", nf(row.head_local_counter_1, 0)], ["Couple max", nf(row.couple_max_a, 2) + " A"], ["Énergie", nf(row.energie_kj, 2) + " kJ"],
@@ -1565,7 +1653,8 @@ async function renderDetail() {
     return;
   }
   const useT = $("#cycle-x").value === "t";
-  const panels = [["tq", "Couple (A)"], ["th", "Poussée (A)"], [useT ? "pos" : "pw", useT ? "Position (mm)" : "Puissance (W)"]];
+  const panels = [["tq", "Couple broche · A"], ["th", "Poussée · A"], [useT ? "pos" : "pw", useT ? "Position · mm" : "Puissance · W"]];
+  // Un cycle : couple en sig-torque, poussée en sig-thrust. Plusieurs : la couleur suit le cycle.
   const traces = [];
   const single = data.filter(Boolean).length === 1;
   data.forEach((d, i) => {
@@ -1577,7 +1666,7 @@ async function renderDetail() {
       traces.push({
         type: "scattergl", mode: "lines", x, y: Array.from(s[k]), xaxis: "x", yaxis: p ? "y" + (p + 1) : "y",
         name: name ?? lbl, legendgroup: "c" + i, showlegend: !single && p === 0,
-        line: { color: T.series[i], width: 1.5 },
+        line: { color: single ? [T.torque, T.thrust, T.series[2]][p] : T.series[i], width: 1.5 },
         hovertemplate: "%{y:.3f}<extra>" + esc(name ? name.slice(0, 32) : lbl) + "</extra>",
       });
       if (single && (k === "tq" || k === "th")) {
@@ -1592,10 +1681,10 @@ async function renderDetail() {
   const L = baseLayout({ hovermode: "x unified", margin: { l: 56, r: 12, t: single ? 16 : 34, b: 44 }, showlegend: !single });
   const doms = [[0.70, 1], [0.37, 0.65], [0, 0.32]];
   panels.forEach(([, lbl], p) => {
-    const ax = { ...L.yaxis, tickfont: { ...L.yaxis.tickfont }, domain: doms[p], title: { text: lbl, font: { color: T.text2, size: 12 } } };
+    const ax = { ...L.yaxis, tickfont: { ...L.yaxis.tickfont }, domain: doms[p], title: { ...L.yaxis.title, text: lbl } };
     L[p ? "yaxis" + (p + 1) : "yaxis"] = ax;
   });
-  L.xaxis = { ...L.xaxis, anchor: "y3", title: { text: useT ? "Temps (s)" : "Position (mm)", font: { color: T.text2, size: 12 } } };
+  L.xaxis = { ...L.xaxis, anchor: "y3", title: { ...L.xaxis.title, text: useT ? "Temps · s" : "Position · mm" } };
   // bandes d'étapes du premier cycle (axe temps uniquement)
   if (useT) {
     const s = data[0].samples, rate = data[0].rate, shapes = [], ann = [];
@@ -1617,7 +1706,7 @@ async function renderDetail() {
   Plotly.react("cycle-plot", traces, L, PCONF);
 
   const st = data[0].steps, pg = data[0].program;
-  const tbl = (t, title) => !t.header.length ? "" : "<h3 style=\"font-size:14px;margin:14px 0 6px\">" + title + '</h3><div class="tablewrap"><table class="data"><thead><tr>' +
+  const tbl = (t, title) => !t.header.length ? "" : '<h3 class="section-title">' + title + '</h3><div class="tablewrap"><table class="data"><thead><tr>' +
     t.header.map((h) => '<th class="num">' + esc(h) + "</th>").join("") + "</tr></thead><tbody>" +
     t.rows.map((r) => "<tr>" + r.map((c) => '<td class="num">' + esc(c) + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>";
   $("#cycle-steps").innerHTML = tbl(st, "Résultats par étape") + tbl(pg, "Programme");
@@ -1644,6 +1733,7 @@ $("#cycle-next").addEventListener("click", () => step(1));
 
 // ---------------------------------------------------------------- navigation et rendu
 function setTab(tab) {
+  if (tab === "depot" && !DEPOT_OUVERT) tab = "dash";
   S.tab = tab;
   document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
   setTabVisibility();
@@ -1736,17 +1826,18 @@ $("#in-dash").onchange = async (e) => {
   } catch { toast("Fichier de disposition illisible"); }
   e.target.value = "";
 };
-const THEMES = ["auto", "light", "dark"];
+// Thème : clair (Atelier) par défaut, sombre (Scène) sur demande ; il ne suit pas le système.
+// Les graphiques relisent les jetons à chaque rendu.
 function applyTheme(t) {
-  if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
-  $("#btn-theme").title = "Thème : " + { auto: "automatique", light: "clair", dark: "sombre" }[t];
+  document.documentElement.setAttribute("data-theme", t);
+  const b = $("#btn-theme"), autre = t === "dark" ? "Thème clair" : "Thème sombre";
+  b.innerHTML = ico(t === "dark" ? "sun" : "moon"); b.title = autre; b.setAttribute("aria-label", autre);
   S.colorMaps = {};
 }
 $("#btn-theme").onclick = () => {
-  const t = THEMES[(THEMES.indexOf(store.get("theme", "auto")) + 1) % 3];
+  const t = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
   store.set("theme", t); applyTheme(t); renderCurrent();
 };
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { S.colorMaps = {}; renderCurrent(); });
 
 // ---------------------------------------------------------------- base Supabase
 // Projet à lire : URL et clé publique (publishable / anon), faites pour être visibles
@@ -1925,6 +2016,7 @@ const auth = {
       return;
     }
     $("#who").textContent = session.user.email;
+    $("#btn-logout").title = "Connecté : " + session.user.email;
     document.body.classList.remove("locked");
     start();
   },
@@ -1981,7 +2073,14 @@ async function start() {
   refresh();
   await base.loadCycles();
 }
-applyTheme(store.get("theme", "auto"));
+applyTheme(store.get("theme", "light") === "dark" ? "dark" : "light");
+document.querySelectorAll("[data-mark]").forEach((el) => el.insertAdjacentHTML("afterbegin", Arion.mark(20)));
+document.querySelectorAll("[data-ico]").forEach((el) => el.insertAdjacentHTML("afterbegin", ico(el.dataset.ico)));
+if (!DEPOT_OUVERT) {
+  document.querySelectorAll("[data-depot]").forEach((el) => (el.hidden = true));
+  document.querySelectorAll("[data-depot-ferme]").forEach((el) => (el.hidden = false));
+  document.body.classList.add("depot-ferme");
+}
 auth.check();
 </script>
 </body>
