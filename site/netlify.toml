@@ -5,6 +5,10 @@
 [build]
   command = "node ../app/build-config.js && npm run build"
   publish = "dist"
+  # Par défaut, Netlify annule le build si rien n'a changé dans site/ (dossier de base) :
+  # un commit qui ne touche que l'app (../app) n'était jamais publié. Build si site/, app/
+  # ou le netlify.toml racine ont changé depuis le dernier déploiement.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../app ../netlify.toml"
 
 # L'URL et la clé publishable/anon sont publiques par nature : config.js les sert exprès.
 # Netlify les a marquées « secrètes » et bloquerait le build en les y trouvant.

@@ -17,6 +17,9 @@ Mode d'emploi pour Yann : `README.md`.
   Supabase (fragment `access_token` / `error_description`), qui mènent à la Site URL (racine).
   Build Netlify (`site/netlify.toml`) : `node ../app/build-config.js && npm run build`, publie
   `site/dist/`. En local : `cd site && npm install && npm run build && npm run preview`.
+  Son `ignore` lance le build seulement si `site/`, `app/` ou le `netlify.toml` racine ont
+  changé : sans lui, Netlify annule tout commit qui ne touche pas `site/` (dossier de base).
+  Un nouveau dossier dont dépend le site doit y être ajouté.
 - `app/index.html` : **l'app unique** (servie sous `/app/`, voir `site/`).
   Page statique : connexion Supabase Auth (connexion seule, pas d'inscription ; compte dans
   `utilisateur_autorise` ; liens d'invitation/réinitialisation → écran « Choisissez votre mot
