@@ -392,12 +392,14 @@ class Api:
             raise RuntimeError(f"HTTP {exc.code} : {detail}") from None
 
 
-def import_file(api: Api, path: Path) -> tuple[str, str]:
+def import_file(api: Api, path: Path, chemin: str | None) -> tuple[str, str]:
     raw = path.read_bytes()
-    log = {"file_name": path.name, "sha256": hashlib.sha256(raw).hexdigest(),
+    log = {"file_name": chemin or path.name, "sha256": hashlib.sha256(raw).hexdigest(),
            "size_bytes": len(raw), "source": "cli"}
     try:
         doc = parse(raw, path.name)
+        # dossier de l'essai (« DT00012 - acme foret Ø8.5/… ») : lu par la base, comme pour la page
+        doc["source_path"] = chemin
         log["is_synthetic"] = doc["is_synthetic"]
         result = api.post("rpc/import_cycle", {"p": doc})
         status = result["status"]
@@ -414,16 +416,22 @@ def import_file(api: Api, path: Path) -> tuple[str, str]:
     return status, message
 
 
-def expand(paths: list[str]) -> list[Path]:
+def expand(paths: list[str]) -> list[tuple[Path, str | None]]:
+    """Fichiers à importer, avec leur chemin à partir du dossier donné (dossier compris),
+    comme la page quand on y dépose un dossier. Les sous-dossiers sont parcourus."""
     files = []
     for p in map(Path, paths):
-        files.extend(sorted(p.glob("*.xls")) if p.is_dir() else [p])
+        p = p.resolve()
+        if p.is_dir():
+            files.extend((f, f.relative_to(p.parent).as_posix()) for f in sorted(p.glob("**/*.xls")))
+        else:
+            files.append((p, f"{p.parent.name}/{p.name}" if p.parent.name else None))
     return files
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("chemins", nargs="+", help="fichiers .xls ou dossiers")
+    parser.add_argument("chemins", nargs="+", help="fichiers .xls ou dossiers (sous-dossiers compris)")
     parser.add_argument("--parallele", type=int, default=4, help="imports simultanés")
     args = parser.parse_args()
 
@@ -438,9 +446,9 @@ def main() -> int:
     files = expand(args.chemins)
     counts: dict[str, int] = {}
     with ThreadPoolExecutor(max_workers=max(1, args.parallele)) as pool:
-        for path, (status, message) in zip(files, pool.map(lambda f: import_file(api, f), files)):
+        for (path, chemin), (status, message) in zip(files, pool.map(lambda f: import_file(api, *f), files)):
             counts[status] = counts.get(status, 0) + 1
-            print(f"{path.name} : {status} {message}", file=sys.stderr if status == "erreur" else sys.stdout)
+            print(f"{chemin or path.name} : {status} {message}", file=sys.stderr if status == "erreur" else sys.stdout)
     print(" / ".join(f"{n} {s}" for s, n in sorted(counts.items())))
     return 1 if counts.get("erreur") else 0
 

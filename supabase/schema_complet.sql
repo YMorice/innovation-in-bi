@@ -93,7 +93,8 @@ create trigger refuser_compte_non_invite
 -- Stockage des exports de cycles de perçage (un fichier = un cycle).
 --
 -- Modèle en étoile, dans le schéma public (exposé à l'API web de Supabase) :
---   dimensions  : control_box, motor, head, program (+ program_step), stop_code_bit
+--   dimensions  : control_box, motor, head, program (+ program_step), stop_code_bit,
+--                 essai (lu dans le nom du dossier déposé)
 --   faits       : cycle (1 ligne / fichier), cycle_step_result (1 ligne / étape),
 --                 cycle_sample (1 ligne / mesure à sample_rate_hz)
 --   analyse     : cycle_step_stats (agrégats par cycle et étape, calculés à l'import),
@@ -227,6 +228,19 @@ create table public.stop_code_bit (
   is_fault   boolean not null default false
 );
 
+-- Essai d'outil coupant, lu dans le nom du dossier des exports
+-- (« DT00012 - acme foret Ø8.5 ») : voir essai_lire_chemin.
+create table public.essai (
+  id           bigint generated always as identity primary key,
+  code         text not null unique,   -- « DT00012 »
+  libelle      text not null,          -- nom complet du dossier
+  fournisseur  text,                   -- premier mot, en majuscules sans accent : « ACME »
+  designation  text,                   -- le reste, hors diamètre : « foret »
+  diametre_mm  numeric,                -- « Ø8.5 », « ø 6,8 mm » -> 8.5, 6.8
+  extra        jsonb not null default '{}',
+  created_at   timestamptz not null default now()
+);
+
 -- ---------------------------------------------------------------- faits
 
 create table public.cycle (
@@ -256,6 +270,8 @@ create table public.cycle (
   -- traçabilité
   source_file               text,
   source_sha256             text unique,
+  source_path               text,          -- chemin déposé, dossiers compris (null : fichier seul)
+  essai_id                  bigint references public.essai (id),
   imported_at               timestamptz not null default now(),
   extra                     jsonb not null default '{}',
   is_synthetic              boolean not null default false,  -- généré par synthetique/generer.py
@@ -267,6 +283,7 @@ create index cycle_head_idx       on public.cycle (head_id, head_global_counter)
 create index cycle_program_idx    on public.cycle (program_id);
 create index cycle_motor_idx      on public.cycle (motor_id);
 create index cycle_synthetic_idx  on public.cycle (is_synthetic) where is_synthetic;
+create index cycle_essai_idx      on public.cycle (essai_id);
 
 create table public.cycle_step_result (
   cycle_id           bigint not null references public.cycle (id) on delete cascade,
@@ -402,12 +419,19 @@ select c.id                  as cycle_id,
        p.id                  as program_id,
        p.pset_type, p.pset_nb, p.pset_version,
        c.source_file,
-       c.is_synthetic
+       c.is_synthetic,
+       c.source_path,
+       e.code                as essai_code,
+       e.libelle             as essai_libelle,
+       e.fournisseur,
+       e.designation,
+       e.diametre_mm
   from public.cycle c
   join public.control_box b on b.id = c.box_id
   left join public.motor   m on m.id = c.motor_id
   left join public.head    h on h.id = c.head_id
-  left join public.program p on p.id = c.program_id;
+  left join public.program p on p.id = c.program_id
+  left join public.essai   e on e.id = c.essai_id;
 
 -- Une ligne par cycle et par étape : consigne (programme) face au réalisé
 -- (résultats de l'export et agrégats calculés).
@@ -463,7 +487,7 @@ declare
 begin
   foreach t in array array['control_box', 'motor', 'head', 'program', 'program_step',
                            'stop_code_bit', 'cycle', 'cycle_step_result', 'cycle_sample',
-                           'cycle_step_stats']
+                           'cycle_step_stats', 'essai']
   loop
     execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on public.%I from anon, authenticated', t);
@@ -520,6 +544,94 @@ as $$
     from jsonb_array_elements_text(j) with ordinality as x(e, o)
 $$;
 
+-- Chemin d'un export -> essai. Le dossier retenu est le plus proche du fichier dont le
+-- nom commence par « DT » suivi de chiffres. Sans un tel dossier, tout est null.
+create or replace function public.essai_lire_chemin(
+  p_path          text,
+  out code        text,
+  out libelle     text,
+  out fournisseur text,
+  out designation text,
+  out diametre_mm numeric)
+language plpgsql
+immutable
+set search_path = ''
+as $$
+declare
+  v_dossiers text[];
+  v_m        text[];
+  v_reste    text;
+  v_mot      text;
+begin
+  v_dossiers := string_to_array(normalize(coalesce(p_path, ''), nfc), '/');
+  -- le dernier élément est le fichier lui-même
+  for i in reverse coalesce(array_length(v_dossiers, 1), 0) - 1 .. 1 loop
+    v_m := regexp_match(v_dossiers[i], '^\s*DT\s*(\d+)\s*[-–—_:]*\s*(.*)$', 'i');
+    if v_m is not null then
+      libelle := btrim(v_dossiers[i]);
+      exit;
+    end if;
+  end loop;
+  if v_m is null then
+    return;
+  end if;
+  code := 'DT' || v_m[1];
+  diametre_mm := replace((regexp_match(v_m[2], '[ØøΦφ⌀]\s*(\d+(?:[.,]\d+)?)'))[1], ',', '.')::numeric;
+  v_reste := btrim(regexp_replace(regexp_replace(v_m[2], '[ØøΦφ⌀]\s*\d+(?:[.,]\d+)?\s*(mm\M)?', ' ', 'gi'), '\s+', ' ', 'g'));
+  v_mot := split_part(v_reste, ' ', 1);
+  -- « müller » et « Muller » doivent tomber dans le même groupe
+  fournisseur := nullif(upper(translate(v_mot,
+    'àâäáãéèêëíìîïóòôöõúùûüçñÀÂÄÁÃÉÈÊËÍÌÎÏÓÒÔÖÕÚÙÛÜÇÑ',
+    'aaaaaeeeeiiiiooooouuuucnAAAAAEEEEIIIIOOOOOUUUUCN')), '');
+  designation := nullif(btrim(substr(v_reste, length(v_mot) + 1)), '');
+end $$;
+
+-- Essai du chemin, créé s'il n'existe pas encore. Un essai déjà connu garde ses
+-- valeurs (éventuellement corrigées à la main).
+create or replace function public.essai_depuis_chemin(p_path text)
+returns bigint
+language plpgsql
+set search_path = ''
+as $$
+declare
+  e    record;
+  v_id bigint;
+begin
+  select * into e from public.essai_lire_chemin(p_path);
+  if e.code is null then
+    return null;
+  end if;
+  insert into public.essai (code, libelle, fournisseur, designation, diametre_mm)
+  values (e.code, e.libelle, e.fournisseur, e.designation, e.diametre_mm)
+  on conflict (code) do nothing
+  returning id into v_id;
+  if v_id is null then
+    select id into v_id from public.essai where code = e.code;
+  end if;
+  return v_id;
+end $$;
+
+-- Cycle déjà en base, redéposé : prend le chemin du nouveau dépôt s'il n'a pas encore
+-- d'essai. Renvoie vrai si le cycle vient d'être rattaché à un essai.
+create or replace function public.rattacher_dossier(p_cycle bigint, p_path text)
+returns boolean
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_essai bigint;
+begin
+  if p_path is null or p_cycle is null then
+    return false;
+  end if;
+  update public.cycle
+     set source_path = normalize(p_path, nfc),
+         essai_id    = public.essai_depuis_chemin(p_path)
+   where id = p_cycle and essai_id is null
+  returning essai_id into v_essai;
+  return v_essai is not null;
+end $$;
+
 create or replace function public.import_cycle(p jsonb)
 returns jsonb
 language plpgsql
@@ -534,12 +646,15 @@ declare
   v_hash      text;
   v_samples   int;
   v_existing  bigint;
+  v_rattache  boolean;
   s           jsonb := p->'samples';
 begin
   select id into v_existing from public.cycle where source_sha256 = p->>'source_sha256';
   if v_existing is not null then
-    return jsonb_build_object('status', 'doublon', 'cycle_id', v_existing,
-                              'message', 'fichier déjà importé');
+    v_rattache := public.rattacher_dossier(v_existing, p->>'source_path');
+    return jsonb_build_object('status', 'doublon', 'cycle_id', v_existing, 'rattache', v_rattache,
+                              'message', 'fichier déjà importé'
+                                         || case when v_rattache then ', dossier rattaché' else '' end);
   end if;
 
   -- dimensions : la dernière valeur importée fait foi
@@ -627,12 +742,14 @@ begin
           head_id, program_id, box_release, box_firmware_version, box_maintenance_date,
           box_operation_time, pset_default_selection, motor_operation_time,
           head_global_counter, head_local_counter_1, head_local_counter_2, cycle_time_s,
-          distance_mm, cycle_ok, source_file, source_sha256, is_synthetic, extra)
+          distance_mm, cycle_ok, source_file, source_sha256, source_path, essai_id,
+          is_synthetic, extra)
   select r.drilling_cycle_id, r.started_at, r.file_version, r.sample_rate_hz, v_box, v_motor,
          v_head, v_program, r.box_release, r.box_firmware_version, r.box_maintenance_date,
          r.box_operation_time, r.pset_default_selection, r.motor_operation_time,
          r.head_global_counter, r.head_local_counter_1, r.head_local_counter_2,
          r.cycle_time_s, r.distance_mm, r.cycle_ok, r.source_file, r.source_sha256,
+         normalize(r.source_path, nfc), public.essai_depuis_chemin(r.source_path),
          coalesce(r.is_synthetic, false), coalesce(r.extra, '{}')
     from jsonb_populate_record(null::public.cycle, p) r
   on conflict (box_id, drilling_cycle_id) do nothing
@@ -641,8 +758,10 @@ begin
   if v_cycle is null then
     select id into v_existing from public.cycle
      where box_id = v_box and drilling_cycle_id = (p->>'drilling_cycle_id')::bigint;
-    return jsonb_build_object('status', 'doublon', 'cycle_id', v_existing,
-                              'message', 'cycle déjà connu (même boîtier et Drilling Cycle ID)');
+    v_rattache := public.rattacher_dossier(v_existing, p->>'source_path');
+    return jsonb_build_object('status', 'doublon', 'cycle_id', v_existing, 'rattache', v_rattache,
+                              'message', 'cycle déjà connu (même boîtier et Drilling Cycle ID)'
+                                         || case when v_rattache then ', dossier rattaché' else '' end);
   end if;
 
   insert into public.cycle_step_result
@@ -712,6 +831,7 @@ begin
   delete from public.head h where not exists (select 1 from public.cycle c where c.head_id = h.id);
   delete from public.motor m where not exists (select 1 from public.cycle c where c.motor_id = m.id);
   delete from public.control_box b where not exists (select 1 from public.cycle c where c.box_id = b.id);
+  delete from public.essai e where not exists (select 1 from public.cycle c where c.essai_id = e.id);
   return jsonb_build_object('cycles_supprimes', v_cycles);
 end $$;
 
@@ -721,12 +841,18 @@ end $$;
 revoke execute on function public.jsonb_float8_array(jsonb)             from public, anon, authenticated;
 revoke execute on function public.import_cycle(jsonb)                   from public, anon, authenticated;
 revoke execute on function public.purge_synthetic()                     from public, anon, authenticated;
+revoke execute on function public.essai_lire_chemin(text)               from public, anon, authenticated;
+revoke execute on function public.essai_depuis_chemin(text)             from public, anon, authenticated;
+revoke execute on function public.rattacher_dossier(bigint, text)       from public, anon, authenticated;
 revoke execute on function public.ensure_cycle_sample_partition(bigint) from public, anon, authenticated;
 revoke execute on function public.refresh_cycle_step_stats(bigint)      from public, anon, authenticated;
 
 grant execute on function public.jsonb_float8_array(jsonb)             to service_role;
 grant execute on function public.import_cycle(jsonb)                   to service_role;
 grant execute on function public.purge_synthetic()                     to service_role;
+grant execute on function public.essai_lire_chemin(text)               to service_role;
+grant execute on function public.essai_depuis_chemin(text)             to service_role;
+grant execute on function public.rattacher_dossier(bigint, text)       to service_role;
 grant execute on function public.ensure_cycle_sample_partition(bigint) to service_role;
 grant execute on function public.refresh_cycle_step_stats(bigint)      to service_role;
 
@@ -774,12 +900,19 @@ select c.id                                   as db_id,
        st.puissance_max_w, st.energie_kj,
        st.course_mm, st.gap_max_mm,
        r.stop_code_max,
-       r.etapes
+       r.etapes,
+       c.source_path,
+       e.code                                 as essai_code,
+       e.libelle                              as essai_libelle,
+       e.fournisseur,
+       e.designation,
+       e.diametre_mm
   from public.cycle c
   join public.control_box b on b.id = c.box_id
   left join public.motor   m on m.id = c.motor_id
   left join public.head    h on h.id = c.head_id
   left join public.program p on p.id = c.program_id
+  left join public.essai   e on e.id = c.essai_id
   left join lateral (
     select sum(s.n_samples)                                           as nb_mesures,
            max(s.torque_max_a)                                        as couple_max_a,

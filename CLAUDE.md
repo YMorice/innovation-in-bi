@@ -32,8 +32,13 @@ Mode d'emploi pour Yann : `README.md`.
   `netlify.toml` racine fixe `base = "site"` (sans lui, Netlify publierait la racine du
   dépôt). Ne plus lancer `netlify deploy` ni glisser-déposer : le push suivant l'écraserait.
 - `supabase/migrations/` : schéma (tables en `public`), `import_cycle`, accès sur invitation,
-  vue de résumé, `deposer_cycle`. Appliquées à la main dans l'éditeur SQL : le réseau de Yann
-  bloque le port 5432, tout passe par HTTPS.
+  vue de résumé, `deposer_cycle`, essais. L'essai (code DT, fournisseur, désignation,
+  diamètre) est lu par `essai_lire_chemin` dans le nom du dossier déposé
+  (« DT00012 - acme foret Ø8.5 ») : la page et le script envoient `source_path` dans
+  le document ; le contenu des exports n'en dit rien. Exemple fictif : les vrais noms
+  d'essais viennent du dossier interdit, ne pas les écrire dans le dépôt. Migrations
+  appliquées à la main dans l'éditeur SQL : le réseau de Yann bloque le port 5432, tout
+  passe par HTTPS.
 - `supabase/schema_complet.sql` : toutes les migrations fusionnées, pour une base neuve
   (celle des vraies données, à laquelle Claude n'a pas accès). Toute nouvelle migration
   doit aussi y être reportée.

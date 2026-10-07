@@ -56,15 +56,19 @@ Retirer quelqu'un : `delete from public.utilisateur_autorise where email = '…'
 - **Dépôt** : fichiers `.xls` ou dossiers entiers. Chaque fichier est découpé dans le
   navigateur, sa copie compressée va dans le bucket privé `exports`, puis la fonction
   `deposer_cycle` l'intègre en base et le note au journal. Un fichier déjà importé est
-  reconnu. Un `.csv` avec une colonne `source_file` (ex. `verite_terrain.csv`) est joint
-  aux cycles des tableaux de bord, sur le poste seulement.
+  reconnu. Déposer le **dossier de l'essai** (« DT00012 - acme foret Ø8.5 ») plutôt que
+  ses fichiers : la base lit dans son nom l'essai, le fournisseur, la désignation et le
+  diamètre (table `essai`). Un fichier déjà en base, redéposé avec son dossier, est rattaché
+  à son essai sans être réimporté. Une valeur mal lue se corrige dans la table `essai`.
+  Un `.csv` avec une colonne `source_file` (ex. `verite_terrain.csv`) est joint aux cycles
+  des tableaux de bord, sur le poste seulement.
 - **Tableau de bord / Cycle / Données** : lus en base (`v_cycle_resume`, mesures à la
   demande), filtres, graphiques configurables, export CSV.
 
 ## Scripts
 
 ```bash
-python scripts/charger_cycles.py donnees/synthetiques/ --parallele 4   # import en masse (clé secrète du .env)
+python scripts/charger_cycles.py donnees/synthetiques/ --parallele 4   # import en masse (clé secrète du .env), sous-dossiers compris
 pip install numpy
 python scripts/generer_synthetiques.py --cycles 600                     # -> donnees/synthetiques/
 ```

@@ -267,6 +267,9 @@ header.top .who { font-size: 12px; color: var(--text-2); max-width: 220px; overf
       <h2>Déposer des exports en base</h2>
       <p>Glissez ici des fichiers <b>.xls</b> exportés par les boîtiers de perçage, ou un dossier entier.
         Chaque fichier est lu dans votre navigateur puis intégré en base ; un fichier déjà importé est reconnu et ignoré.</p>
+      <p>Déposez le <b>dossier de l'essai</b> (par exemple « DT00012 - acme foret Ø8.5 ») plutôt que ses fichiers :
+        son nom donne l'essai, le fournisseur et le diamètre de l'outil. Un fichier déjà en base, redéposé avec son dossier,
+        est rattaché à son essai.</p>
       <p>Un <b>.csv</b> avec une colonne <code>source_file</code> (par exemple <code>verite_terrain.csv</code>) est joint aux cycles
         des tableaux de bord, sur cet ordinateur seulement : il n'est pas envoyé en base.</p>
       <div class="actions">
@@ -814,6 +817,7 @@ const LABELS = {
   poussee_max_a: "Poussée max (A)", poussee_moy_a: "Poussée moyenne (A)", puissance_max_w: "Puissance max (W)",
   energie_kj: "Énergie (kJ)", course_mm: "Course (mm)", gap_max_mm: "Gap max (mm)",
   stop_code_max: "Stop code max",
+  fournisseur: "Fournisseur de l'outil", essai: "Essai (dossier DT)", designation: "Désignation de l'outil", diametre: "Diamètre de l'outil",
   tool_wear: "Usure outil (vérité terrain)", tool_holes: "Trous de l'outil", tool_life_holes: "Durée de vie outil (trous)",
   anomaly: "Anomalie injectée", anomaly_step: "Étape de l'anomalie", tool_id: "ID outil",
 };
@@ -951,12 +955,21 @@ function ingestCSV(name, text) {
   return rows.length - 1;
 }
 
+// Chemin d'un fichier déposé avec son dossier (« DT00012 - acme foret Ø8.5/x.xls ») : la base
+// lit l'essai et le fournisseur dans le nom du dossier. Null pour un fichier déposé seul.
+const chemins = new WeakMap();
+const cheminDe = (f) => { const p = chemins.get(f) || f.webkitRelativePath || ""; return p.includes("/") ? p : null; };
+
 async function filesFromDrop(dt) {
   const items = [...(dt.items || [])].map((i) => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
   if (!items.length) return [...dt.files];
   const out = [];
   async function walk(entry) {
-    if (entry.isFile) out.push(await new Promise((res, rej) => entry.file(res, rej)));
+    if (entry.isFile) {
+      const f = await new Promise((res, rej) => entry.file(res, rej));
+      chemins.set(f, entry.fullPath.replace(/^\/+/, ""));
+      out.push(f);
+    }
     else if (entry.isDirectory) {
       const reader = entry.createReader();
       for (;;) {
@@ -998,7 +1011,7 @@ const depot = {
   add(files) {
     const ok = files.filter((f) => /\.xls$/i.test(f.name));
     this.ignored += files.length - ok.length;
-    for (const file of ok) this.items.push({ id: ++this.seq, file, etat: "attente", message: "" });
+    for (const file of ok) this.items.push({ id: ++this.seq, file, chemin: cheminDe(file), etat: "attente", message: "" });
     this.render(); this.pump();
   },
   pump() {
@@ -1017,19 +1030,29 @@ const depot = {
   async send(it) {
     try {
       const m = await pool.run(it.file, false, "import");
+      // Fichier déjà en base : ni copie ni mesures à renvoyer, seulement son dossier pour le
+      // rattacher à son essai. Redéposer un dossier entier reste donc rapide.
+      const deja = m.ok && (await base.check(sb.from("cycle").select("id").eq("source_sha256", m.sha256).limit(1))).length > 0;
       let storagePath = null;
-      if (m.gz && m.sha256) {
+      if (m.gz && m.sha256 && !deja) {
         const path = "depots/" + m.sha256.slice(0, 2) + "/" + m.sha256 + ".xls.gz";
         const { error } = await sb.storage.from("exports").upload(path, new Blob([m.gz], { type: "application/gzip" }), { contentType: "application/gzip", upsert: false });
         if (!error || /exist|duplicate/i.test(error.message)) storagePath = path;
       }
+      let doc = null;
+      if (m.ok) {
+        doc = JSON.parse(m.doc);
+        doc.source_path = it.chemin;
+        if (deja) doc.samples = {};
+      }
       const { data, error } = await sb.rpc("deposer_cycle", {
-        p: m.ok ? JSON.parse(m.doc) : null,
-        p_file_name: it.file.name, p_sha256: m.sha256, p_size_bytes: m.size,
+        p: doc,
+        p_file_name: it.chemin || it.file.name, p_sha256: m.sha256, p_size_bytes: m.size,
         p_storage_path: storagePath, p_erreur: m.ok ? null : "Format non reconnu : " + m.error,
       });
       if (error) throw new Error(error.message);
       it.etat = data.status;
+      it.rattache = data.rattache === true;
       it.message = data.status === "importé" ? nf(data.samples, 0) + " mesures" : data.message || "";
       if (m.ok && data.status !== "erreur") S.files.set(m.key, it.file);   // courbes lues depuis le fichier, plus rapide
     } catch (err) {
@@ -1039,9 +1062,11 @@ const depot = {
   },
   async done() {
     const n = (e) => this.items.filter((x) => x.etat === e).length;
-    toast(n("importé") + " importé(s) · " + n("doublon") + " déjà en base · " + n("erreur") + " en erreur");
+    const rattaches = this.items.filter((x) => x.rattache).length;
+    toast(n("importé") + " importé(s) · " + n("doublon") + " déjà en base" +
+      (rattaches ? " (dont " + rattaches + " rattaché(s) à leur essai)" : "") + " · " + n("erreur") + " en erreur");
     this.loadJournal();
-    if (n("importé")) await base.loadCycles();
+    if (n("importé") || rattaches) await base.loadCycles();
   },
   render() {
     cancelAnimationFrame(this.frame);
@@ -1058,7 +1083,7 @@ const depot = {
       const LBL = { attente: "en attente", envoi: "envoi…", importé: "importé", doublon: "déjà en base", erreur: "erreur" };
       // les en cours et les erreurs d'abord, puis les plus récents
       const shown = [...this.items].sort((a, b) => (a.etat === "envoi" || a.etat === "erreur" ? 0 : 1) - (b.etat === "envoi" || b.etat === "erreur" ? 0 : 1) || b.id - a.id).slice(0, 300);
-      $("#depot-list").innerHTML = shown.map((it) => "<tr><td>" + esc(it.file.name) + '</td><td class="num">' +
+      $("#depot-list").innerHTML = shown.map((it) => "<tr><td>" + esc(it.chemin || it.file.name) + '</td><td class="num">' +
         nf(it.file.size / 1000, 0) + ' ko</td><td><span class="etat ' + it.etat + '">' + LBL[it.etat] + '</span></td><td class="msg">' + esc(it.message) + "</td></tr>").join("") +
         (total > shown.length ? '<tr><td colspan="4" class="msg">… et ' + nf(total - shown.length, 0) + " autre(s)</td></tr>" : "");
     });
@@ -1116,7 +1141,7 @@ const fieldsOf = (...kinds) => Object.values(S.fields)
   .filter((f) => kinds.includes(f.kind) && !HIDDEN.has(f.key) && (f.kind !== "cat" || f.distinct <= 200))
   .sort((a, b) => order(a.key) - order(b.key) || a.label.localeCompare(b.label, "fr"));
 function order(k) {
-  const pri = ["jour", "heure", "cycle_ok", "origine", "programme", "pset_nb", "head_name", "box_sn", "motor_name", "firmware",
+  const pri = ["fournisseur", "essai", "diametre", "designation", "jour", "heure", "cycle_ok", "origine", "programme", "pset_nb", "head_name", "box_sn", "motor_name", "firmware",
     "cycle_time_s", "couple_max_a", "couple_moy_a", "couple_net_moy_a", "poussee_max_a", "poussee_moy_a", "energie_kj",
     "head_local_counter_1", "head_global_counter"];
   const i = pri.indexOf(k);
@@ -1458,7 +1483,7 @@ $("#filters").addEventListener("click", (e) => {
 });
 
 // ---------------------------------------------------------------- table
-const TABLE_COLS = ["started_at", "source_file", "head_name", "box_sn", "programme", "cycle_ok", "cycle_time_s", "couple_max_a", "poussee_max_a", "energie_kj", "head_local_counter_1", "anomaly", "tool_wear"];
+const TABLE_COLS = ["started_at", "source_file", "fournisseur", "essai", "head_name", "box_sn", "programme", "cycle_ok", "cycle_time_s", "couple_max_a", "poussee_max_a", "energie_kj", "head_local_counter_1", "anomaly", "tool_wear"];
 function renderTable() {
   const cols = TABLE_COLS.filter((k) => S.fields[k]);
   const { sort, dir } = S.table;
@@ -1786,6 +1811,9 @@ const base = {
       poussee_max_a: fin(v.poussee_max_a), poussee_moy_a: fin(v.poussee_moy_a),
       puissance_max_w: fin(v.puissance_max_w), energie_kj: fin(v.energie_kj),
       course_mm: fin(v.course_mm), gap_max_mm: fin(v.gap_max_mm), stop_code_max: v.stop_code_max,
+      // essai lu dans le nom du dossier déposé (table essai) ; absent avant la migration essai_outil
+      fournisseur: v.fournisseur ?? null, essai: v.essai_libelle ?? null, designation: v.designation ?? null,
+      diametre: v.diametre_mm == null ? null : "Ø" + nf(v.diametre_mm, 2),
     };
     for (const e of v.etapes || []) {
       for (const k of ["duree_s", "stop_code", "m1_max_a", "m2_max_a", "distance_m2", "couple_moy_a", "poussee_moy_a", "couple_max_a"]) {
