@@ -248,8 +248,59 @@ table.data.depot td.msg, #journal td.msg { white-space: normal; color: var(--tex
 header.top .who { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 1599px) { header.top .who { display: none; } }   /* l'adresse reste dans l'info-bulle de « Se déconnecter » */
 
+/* Exploration : sommaire, sections, constats, schéma de la base */
+#tab-explo .intro { margin: 0 0 var(--space-3); max-width: 92ch; color: var(--text-2); }
+.ex-toc { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ex-toc a {
+  display: inline-flex; align-items: center; height: 28px; padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-full); background: var(--surface);
+  color: var(--text-2); font-size: 12px; font-weight: 500; text-decoration: none;
+}
+.ex-toc a:hover { background: var(--surface-2); color: var(--text); }
+.ex-sec { margin-top: var(--space-8); scroll-margin-top: calc(var(--header) + 12px); }
+.ex-sec > h2 { margin: 0; font-size: 20px; line-height: 26px; font-weight: 600; letter-spacing: -.01em; }
+.ex-sec > .lead { margin: var(--space-1) 0 var(--space-3); max-width: 92ch; color: var(--text-2); }
+.ex-sec .toolbar label.field select { min-width: 160px; }
+@media (min-width: 1000px) { .kpis.ex-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.ex-kpis .val, .ex-insight .val { font-variant-numeric: proportional-nums; }
+.ex-insights { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: var(--space-3); }
+.ex-insight {
+  display: grid; align-content: start; gap: var(--space-1); padding: var(--space-3) var(--space-4) var(--space-4);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+}
+.ex-insight .lbl { font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-variation-settings: "wdth" 82; color: var(--muted); }
+.ex-insight .val { font-size: 24px; line-height: 30px; font-weight: 600; letter-spacing: -.01em; }
+.ex-insight .val .unit { margin-left: var(--space-1); font-family: var(--font-mono); font-size: 13px; font-weight: 400; color: var(--text-2); }
+.ex-insight p { margin: 0; font-size: 13px; line-height: 19px; color: var(--text-2); }
+.ex-insight a { margin-top: var(--space-1); font-size: 12px; color: var(--text-2); }
+/* Schéma de la base : trois colonnes, le cycle au centre */
+.ex-model { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); }
+.ex-model .col { display: grid; align-content: start; gap: var(--space-1); padding: var(--space-3) var(--space-4) var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.ex-model h4 { margin: 0 0 var(--space-1); font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-variation-settings: "wdth" 82; color: var(--muted); }
+.ex-ent { padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+.ex-ent.hub { background: var(--surface); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.ex-ent b { display: flex; justify-content: space-between; gap: var(--space-2); font-weight: 600; }
+.ex-ent .n { font-family: var(--font-mono); font-size: 13px; font-weight: 500; }
+.ex-ent small { display: block; margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--muted); }
+.ex-link { text-align: center; font-size: 12px; line-height: 16px; color: var(--muted); }
+.grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tile .plot.short, .tile .plot.short .empty { height: 230px; }
+.ex-legend { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0 0 var(--space-2); }
+.ex-legend .chip { padding-right: 10px; }
+.ex-legend .chip .sw { width: 10px; height: 10px; border-radius: 2px; }
+table.data.static tbody tr { cursor: default; }
+table.data.static tbody tr:hover { background: none; }
+table.data td.wrap { white-space: normal; min-width: 220px; color: var(--text-2); }
+table.data td.chg { background: var(--warning-soft); color: var(--warning-ink); font-weight: 600; }
+.tile .tablewrap { border: 0; border-radius: 0; max-height: 460px; }
+.ex-list { margin: 0; padding-left: 22px; display: grid; gap: var(--space-2); max-width: 92ch; color: var(--text-2); }
+.ex-list b { color: var(--text); }
+@media (max-width: 1100px) { .grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .ex-model { grid-template-columns: 1fr; } }
+
 @media (max-width: 760px) {
   header.top, .filters, main, nav.tabs { padding-left: 16px; padding-right: 16px; }
+  .grid.three { grid-template-columns: 1fr; }
   .grid { grid-template-columns: 1fr; }
   .tile .plot, .tile .empty { height: 280px; }
   .detail-top input[type=search] { min-width: 0; width: 100%; }
@@ -301,7 +352,8 @@ header.top .who { font-family: var(--font-mono); font-size: 12px; color: var(--t
 </header>
 
 <nav class="tabs" id="tabs" role="tablist" aria-label="Sections" hidden>
-  <button role="tab" data-tab="dash" aria-selected="true">Tableau de bord</button>
+  <button role="tab" data-tab="explo" aria-selected="true">Exploration</button>
+  <button role="tab" data-tab="dash" aria-selected="false">Tableau de bord</button>
   <button role="tab" data-tab="cycle" aria-selected="false">Cycle</button>
   <button role="tab" data-tab="data" aria-selected="false">Données</button>
   <button role="tab" data-tab="depot" data-depot aria-selected="false">Dépôt</button>
@@ -354,6 +406,9 @@ header.top .who { font-family: var(--font-mono); font-size: 12px; color: var(--t
     <h3 class="section-title">Derniers dépôts en base</h3>
     <div class="tablewrap"><table class="data" id="journal"></table></div>
   </section>
+
+  <!-- Exploration : rempli par renderExplo() -->
+  <section id="tab-explo" hidden></section>
 
   <section id="tab-dash" hidden>
     <div class="kpis" id="kpis"></div>
@@ -881,6 +936,7 @@ const LABELS = {
   poussee_max_a: "Poussée max (A)", poussee_moy_a: "Poussée moyenne (A)", puissance_max_w: "Puissance max (W)",
   energie_kj: "Énergie (kJ)", course_mm: "Course (mm)", gap_max_mm: "Gap max (mm)",
   stop_code_max: "Stop code max",
+  recette: "Recette (vitesse/avance par étape)",
   fournisseur: "Fournisseur de l'outil", essai: "Essai (dossier DT)", designation: "Désignation de l'outil", diametre: "Diamètre de l'outil",
   tool_wear: "Usure outil (vérité terrain)", tool_holes: "Trous de l'outil", tool_life_holes: "Durée de vie outil (trous)",
   anomaly: "Anomalie injectée", anomaly_step: "Étape de l'anomalie", tool_id: "ID outil",
@@ -908,7 +964,7 @@ const S = {
   joinCols: [],
   rows: [], filtered: [], fields: {},
   filters: {}, dateFrom: "", dateTo: "",
-  tiles: [], tab: "dash",
+  tiles: [], tab: "explo",
   detail: [], sampleCache: new Map(),
   errors: [],
   table: { sort: "started_at", dir: -1 },
@@ -1226,7 +1282,7 @@ const fieldsOf = (...kinds) => Object.values(S.fields)
   .filter((f) => kinds.includes(f.kind) && !HIDDEN.has(f.key) && (f.kind !== "cat" || f.distinct <= 200))
   .sort((a, b) => order(a.key) - order(b.key) || a.label.localeCompare(b.label, "fr"));
 function order(k) {
-  const pri = ["fournisseur", "essai", "diametre", "designation", "jour", "heure", "cycle_ok", "origine", "programme", "pset_nb", "head_name", "box_sn", "motor_name", "firmware",
+  const pri = ["fournisseur", "essai", "diametre", "designation", "recette", "jour", "heure", "cycle_ok", "origine", "programme", "pset_nb", "head_name", "box_sn", "motor_name", "firmware",
     "cycle_time_s", "couple_max_a", "couple_moy_a", "couple_net_moy_a", "poussee_max_a", "poussee_moy_a", "energie_kj",
     "head_local_counter_1", "head_global_counter"];
   const i = pri.indexOf(k);
@@ -1569,7 +1625,7 @@ $("#filters").addEventListener("click", (e) => {
 });
 
 // ---------------------------------------------------------------- table
-const TABLE_COLS = ["started_at", "source_file", "fournisseur", "essai", "head_name", "box_sn", "programme", "cycle_ok", "cycle_time_s", "couple_max_a", "poussee_max_a", "energie_kj", "head_local_counter_1", "anomaly", "tool_wear"];
+const TABLE_COLS = ["started_at", "source_file", "fournisseur", "essai", "head_name", "box_sn", "programme", "recette", "cycle_ok", "cycle_time_s", "couple_max_a", "poussee_max_a", "energie_kj", "head_local_counter_1", "anomaly", "tool_wear"];
 function renderTable() {
   const cols = TABLE_COLS.filter((k) => S.fields[k]);
   const { sort, dir } = S.table;
@@ -1731,6 +1787,1199 @@ function step(dirn) {
 $("#cycle-prev").addEventListener("click", () => step(-1));
 $("#cycle-next").addEventListener("click", () => step(1));
 
+// ---------------------------------------------------------------- exploration
+// Onglet « Exploration » : comprendre les données avant de les analyser. Tout est calculé dans
+// le navigateur sur la sélection (S.filtered : les filtres du haut s'appliquent ici aussi). En
+// plus des résumés, seuls les libellés des codes d'arrêt sont lus (stop_code_bit), et les
+// mesures brutes de la signature, à la demande. Un graphique est tracé quand il arrive à l'écran.
+// Regroupement central : la recette (réglages exacts du programme, voir base.loadRecettes),
+// à défaut le programme (Pset + version).
+const EX = { built: false, io: null, M: null, bits: null, mesure: "couple_max_a", axe: null, sig: null, sigCache: new Map() };
+const EX_MESURES = [
+  { key: "couple_max_a", nom: "Couple max", unit: "A" },
+  { key: "poussee_max_a", nom: "Poussée max", unit: "A" },
+  { key: "cycle_time_s", nom: "Temps de cycle", unit: "s" },
+  { key: "energie_kj", nom: "Énergie", unit: "kJ" },
+  { key: "couple_moy_a", nom: "Couple moyen", unit: "A" },
+  { key: "poussee_moy_a", nom: "Poussée moyenne", unit: "A" },
+  { key: "puissance_max_w", nom: "Puissance max", unit: "W" },
+  { key: "distance_mm", nom: "Distance", unit: "mm" },
+];
+const EX_COURT = {
+  cycle_time_s: "Temps de cycle", distance_mm: "Distance", couple_max_a: "Couple max", couple_moy_a: "Couple moyen",
+  poussee_max_a: "Poussée max", poussee_moy_a: "Poussée moy.", puissance_max_w: "Puissance max", energie_kj: "Énergie",
+  gap_max_mm: "Gap max", head_local_counter_1: "Compteur local 1", head_global_counter: "Compteur global", heure: "Heure",
+};
+const JOURS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+
+// ------------------------------------------------ outils de calcul
+const estNum = (v) => typeof v === "number" && Number.isFinite(v);
+function quantile(sorted, q) {
+  if (!sorted.length) return null;
+  const p = (sorted.length - 1) * q, i = Math.floor(p), j = Math.min(i + 1, sorted.length - 1);
+  return sorted[i] + (sorted[j] - sorted[i]) * (p - i);
+}
+const medianOf = (v) => quantile(v.filter(estNum).sort((a, b) => a - b), 0.5);
+function linreg(xs, ys) {
+  const n = xs.length;
+  if (n < 3) return null;
+  const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (let i = 0; i < n; i++) { const dx = xs[i] - mx, dy = ys[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+  if (!sxx || !syy) return null;
+  return { slope: sxy / sxx, intercept: my - (sxy / sxx) * mx, r: sxy / Math.sqrt(sxx * syy), n };
+}
+const groupMap = (rows, k) => {
+  const m = new Map();
+  for (const r of rows) { const v = r[k] ?? "(vide)"; if (!m.has(v)) m.set(v, []); m.get(v).push(r); }
+  return m;
+};
+const exDay = (d) => d ? new Date(String(d).slice(0, 10) + "T00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—";
+const isoDay = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const weekOf = (jour) => { const d = new Date(jour + "T00:00"); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return isoDay(d); };
+const rcode = (v) => (v == null ? "—" : String(v).split(" · ")[0]);           // « R3 · 450/0,05 → … » -> « R3 »
+const rcodeNum = (c) => Number(String(c).replace(/\D+/g, "")) || 0;
+const dtCode = (v) => (v == null ? null : (/^\s*(DT\s*\d+)/i.exec(v)?.[1].replace(/\s+/g, "").toUpperCase() ?? String(v)));
+const withUnit = (v, u, d = 1) => (v == null ? "—" : nf(v, d) + '<span class="unit">' + u + "</span>");
+const signe = (v, d = 1) => (v > 0 ? "+" : v < 0 ? "−" : "") + nf(Math.abs(v), d);
+const plural = (n, s, p) => nf(n, 0) + " " + (n > 1 ? p || s + "s" : s);
+
+// Couleurs : une teinte pour la grandeur (claire -> foncée), deux teintes opposées et un gris
+// neutre au milieu pour un écart à une référence. Calculées depuis les jetons Arion.
+function rgbOf(c) {
+  const s = String(c).trim();
+  let m = /^#([0-9a-f]{6})/i.exec(s);
+  if (m) { const n = parseInt(m[1], 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+  m = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(s);
+  if (m) return [m[1], m[2], m[3]].map((h) => parseInt(h + h, 16));
+  m = /rgba?\(([^)]+)\)/i.exec(s);
+  if (m) return m[1].split(",").slice(0, 3).map((x) => Number(x.trim()));
+  return [128, 128, 128];
+}
+const mix = (a, b, t) => { const A = rgbOf(a), B = rgbOf(b); return "rgb(" + A.map((x, i) => Math.round(x + (B[i] - x) * t)).join(",") + ")"; };
+const withAlpha = (c, a) => "rgba(" + rgbOf(c).join(",") + "," + a + ")";
+const seqScale = (T, hue = T.series[0]) => [0, 0.25, 0.5, 0.75, 1].map((t) => [t, mix(T.surface, hue, 0.1 + 0.9 * t)]);
+function divScale(T) {
+  const mid = mix(T.surface, T.text, 0.1);
+  return [[0, T.series[0]], [0.25, mix(mid, T.series[0], 0.55)], [0.5, mid], [0.75, mix(mid, T.series[2], 0.55)], [1, T.series[2]]];
+}
+const colorbar = (T, titre) => ({
+  thickness: 10, outlinewidth: 0, len: 0.9, tickfont: { family: "JetBrains Mono, monospace", size: 10.5, color: T.muted },
+  title: { text: titre, side: "right", font: { size: 11, color: T.text2 } },
+});
+
+// ------------------------------------------------ modèle de la sélection
+function exModel(rows) {
+  const M = { rows, n: rows.length };
+  const count = (k) => { const m = new Map(); for (const r of rows) { const v = r[k]; if (v != null) m.set(v, (m.get(v) || 0) + 1); } return m; };
+  M.count = count;
+  M.rg = rows.some((r) => r.recette) ? "recette" : "programme";
+  const judged = rows.filter((r) => r.cycle_ok);
+  M.nJudged = judged.length;
+  M.nNok = judged.filter((r) => r.cycle_ok === "NOK").length;
+  M.pctOk = judged.length ? (100 * (judged.length - M.nNok)) / judged.length : null;
+  M.days = [...count("jour").keys()].sort();
+  M.mesures = rows.reduce((a, r) => a + (r.nb_mesures || 0), 0);
+  M.etapes = rows.reduce((a, r) => a + (r.nb_etapes || 0), 0);
+  M.boxes = count("box_sn"); M.heads = count("head_uid"); M.motors = count("motor_name"); M.firmwares = count("firmware");
+  M.programmes = count("programme"); M.psets = count("pset_nb"); M.groupes = count(M.rg);
+  M.essais = count("essai"); M.fournisseurs = count("fournisseur");
+  M.nEssai = rows.filter((r) => r.essai).length;
+  M.maxStep = rows.reduce((a, r) => Math.max(a, r.nb_etapes || 0), 0);
+  // médiane de chaque mesure par recette : base des indices (100 = cycle typique de la recette)
+  M.med = {};
+  for (const { key } of EX_MESURES) {
+    const by = {};
+    for (const r of rows) if (r[M.rg] != null && estNum(r[key])) (by[r[M.rg]] ||= []).push(r[key]);
+    M.med[key] = Object.fromEntries(Object.entries(by).map(([g, v]) => [g, medianOf(v)]));
+  }
+  M.rec = exRecStats(M);
+  M.tools = exTools(rows);
+  M.cov = exCoverage(rows);
+  M.gaps = exGaps(rows);
+  M.profile = exProfile(rows);
+  return M;
+}
+const exIndex = (M, r, key) => { const m = M.med[key]?.[r[M.rg]]; return m && estNum(r[key]) ? (100 * r[key]) / m : null; };
+
+// Par recette : volume, conformité, médianes, et par étape l'épaisseur traversée (Distance M2),
+// le courant de broche moyen et l'indice de dureté (courant ÷ avance par tour).
+function exRecStats(M) {
+  const out = [];
+  for (const [lab, rows] of groupMap(M.rows, M.rg)) {
+    const p = M.rg === "recette" ? S.recettes?.get(lab) : null;
+    const judged = rows.filter((r) => r.cycle_ok), nok = judged.filter((r) => r.cycle_ok === "NOK").length;
+    const ok = rows.filter((r) => r.cycle_ok !== "NOK");
+    const nSteps = Math.max(p?.steps.length || 0, ...rows.map((r) => r.nb_etapes || 0));
+    const steps = [];
+    for (let n = 1; n <= nSteps; n++) {
+      const ps = p?.steps.find((s) => s.step_nb === n) || null;
+      const ep = medianOf(ok.map((r) => r["e" + n + "_distance_m2"]));
+      const cm = medianOf(ok.map((r) => r["e" + n + "_couple_moy_a"]));
+      steps.push({ n, ps, ep, cm, durete: cm != null && ps?.feed_mm_tr > 0 ? cm / ps.feed_mm_tr : null, duree: medianOf(ok.map((r) => r["e" + n + "_duree_s"])) });
+    }
+    out.push({
+      lab, code: rcode(lab), p, rows, n: rows.length, judged: judged.length, nok, pct: judged.length ? (100 * nok) / judged.length : null,
+      essais: [...new Set(rows.map((r) => dtCode(r.essai)).filter(Boolean))].sort(),
+      from: rows[0]?.jour, to: rows.at(-1)?.jour, steps,
+      medT: medianOf(rows.map((r) => r.cycle_time_s)), medC: medianOf(rows.map((r) => r.couple_max_a)),
+      medP: medianOf(rows.map((r) => r.poussee_max_a)), medE: medianOf(rows.map((r) => r.energie_kj)),
+    });
+  }
+  return out.sort((a, b) => rcodeNum(a.code) - rcodeNum(b.code) || String(a.lab).localeCompare(String(b.lab), "fr", { numeric: true }));
+}
+
+// Forets : le compteur local 1 de la tête compte les trous depuis sa remise à zéro, faite au
+// changement de foret. Dans l'ordre de perçage (compteur global), une baisse = un nouveau foret.
+// Vie d'un foret changé : trous de la tête entre son montage et celui du suivant, exportés ou non.
+function exTools(rows) {
+  const byHead = new Map();
+  for (const r of rows) {
+    if (!r.head_uid || !estNum(r.head_local_counter_1)) continue;
+    if (!byHead.has(r.head_uid)) byHead.set(r.head_uid, []);
+    byHead.get(r.head_uid).push(r);
+  }
+  const tools = [];
+  for (const [uid, list] of byHead) {
+    const parCompteur = list.every((r) => estNum(r.head_global_counter));
+    list.sort((a, b) => (parCompteur ? a.head_global_counter - b.head_global_counter : 0) || (a.started_at < b.started_at ? -1 : 1));
+    let cur = null;
+    for (const r of list) {
+      if (!cur || r.head_local_counter_1 < cur.last) {
+        cur = { uid, head: r.head_name ?? uid, rows: [], mount: parCompteur ? r.head_global_counter - r.head_local_counter_1 : null };
+        tools.push(cur);
+      }
+      cur.rows.push(r); cur.last = r.head_local_counter_1;
+    }
+  }
+  tools.forEach((t, i) => {
+    const next = tools[i + 1];
+    t.changed = !!next && next.uid === t.uid;
+    const ecart = t.changed && t.mount != null && next.mount != null ? next.mount - t.mount : null;
+    t.life = t.changed ? (ecart != null && ecart > t.last ? ecart : t.last + 1) : null;
+    t.nok = t.rows.filter((r) => r.cycle_ok === "NOK").length;
+    t.from = t.rows.reduce((a, r) => (r.started_at < a ? r.started_at : a), t.rows[0].started_at);
+    t.to = t.rows.reduce((a, r) => (r.started_at > a ? r.started_at : a), t.rows[0].started_at);
+  });
+  return tools;
+}
+// Couverture : le compteur global d'une tête avance d'un cran par trou ; on le compare au
+// nombre de cycles en base pour savoir si tous les trous percés ont été exportés.
+function exCoverage(rows) {
+  const by = new Map();
+  for (const r of rows) if (r.head_uid && estNum(r.head_global_counter)) { if (!by.has(r.head_uid)) by.set(r.head_uid, new Set()); by.get(r.head_uid).add(r.head_global_counter); }
+  let span = 0, n = 0;
+  for (const s of by.values()) { let lo = Infinity, hi = -Infinity; for (const v of s) { if (v < lo) lo = v; if (v > hi) hi = v; } span += hi - lo + 1; n += s.size; }
+  return { span, n, ratio: span ? n / span : null };
+}
+// Minutes entre deux cycles consécutifs d'un même boîtier.
+function exGaps(rows) {
+  const by = new Map();
+  for (const r of rows) { if (!r.box_sn) continue; if (!by.has(r.box_sn)) by.set(r.box_sn, []); by.get(r.box_sn).push(Date.parse(r.started_at)); }
+  const out = [];
+  for (const ts of by.values()) { ts.sort((a, b) => a - b); for (let i = 1; i < ts.length; i++) out.push((ts[i] - ts[i - 1]) / 60000); }
+  return out;
+}
+// Profil de chaque champ : remplissage, valeurs distinctes, étendue.
+function exProfile(rows) {
+  const keys = Object.keys(S.fields).filter((k) => !HIDDEN.has(k) && k !== "key" && S.fields[k].kind !== "date");
+  return keys.map((k) => {
+    const vals = rows.map((r) => r[k]).filter((v) => v != null && v !== "");
+    const distinct = new Set(vals).size, nums = vals.filter(estNum).sort((a, b) => a - b);
+    const num = nums.length === vals.length && nums.length > 0;
+    let constat = "varie";
+    if (!vals.length) constat = "vide";
+    else if (distinct === 1) constat = "constant";
+    else if (!num && distinct === rows.length && rows.length > 20) constat = "unique par cycle";
+    let top = null;
+    if (!num && vals.length) { const c = new Map(); vals.forEach((v) => c.set(v, (c.get(v) || 0) + 1)); top = [...c.entries()].sort((a, b) => b[1] - a[1])[0][0]; }
+    return {
+      k, label: label(k), step: /^e\d+_/.test(k), rempli: rows.length ? vals.length / rows.length : 0, distinct, num, constat, top,
+      min: num ? nums[0] : null, med: num ? quantile(nums, 0.5) : null, max: num ? nums.at(-1) : null,
+    };
+  }).sort((a, b) => (a.step - b.step) || order(a.k) - order(b.k) || a.label.localeCompare(b.label, "fr", { numeric: true }));
+}
+// Étape et code d'arrêt où les cycles en anomalie s'écartent de l'habitude de leur recette.
+function exNokSteps(M) {
+  const normal = new Map();
+  for (const r of M.rows) {
+    if (r.cycle_ok !== "OK") continue;
+    for (let n = 1; n <= (r.nb_etapes || 0); n++) {
+      const k = r[M.rg] + "|" + n, c = r["e" + n + "_stop_code"];
+      if (!normal.has(k)) normal.set(k, new Map());
+      normal.get(k).set(c, (normal.get(k).get(c) || 0) + 1);
+    }
+  }
+  const usuel = (r, n, c) => { const m = normal.get(r[M.rg] + "|" + n); if (!m) return false; const tot = [...m.values()].reduce((a, b) => a + b, 0); return (m.get(c) || 0) >= 0.05 * tot; };
+  const tally = new Map();
+  for (const r of M.rows) {
+    if (r.cycle_ok !== "NOK") continue;
+    let hit = null;
+    for (let n = 1; n <= (r.nb_etapes || 0) && !hit; n++) { const c = r["e" + n + "_stop_code"]; if (c != null && !usuel(r, n, c)) hit = n + "|" + c; }
+    if (!hit && r.nb_etapes) hit = r.nb_etapes + "|" + r["e" + r.nb_etapes + "_stop_code"];
+    if (hit) tally.set(hit, (tally.get(hit) || 0) + 1);
+  }
+  const top = [...tally.entries()].sort((a, b) => b[1] - a[1])[0];
+  if (!top) return null;
+  const [n, code] = top[0].split("|");
+  return { n, code, k: top[1] };
+}
+// Usure : couple max selon le compteur local 1, recette par recette (cycles non en anomalie).
+function exWearFits(M) {
+  const out = [];
+  for (const g of M.rec) {
+    const pts = g.rows.filter((r) => r.cycle_ok !== "NOK" && estNum(r.head_local_counter_1) && estNum(r.couple_max_a));
+    if (pts.length < 15) continue;
+    const xs = pts.map((r) => r.head_local_counter_1);
+    if (Math.max(...xs) - Math.min(...xs) < 20) continue;
+    const fit = linreg(xs, pts.map((r) => r.couple_max_a));
+    if (fit) out.push({ lab: g.lab, code: g.code, fit, pts });
+  }
+  return out;
+}
+// Matière traversée : indice de dureté par étape pour la recette la plus utilisée qui en a deux.
+function exMatiere(M) {
+  const g = M.rec.filter((x) => x.steps.filter((s) => s.durete != null).length >= 2).sort((a, b) => b.n - a.n)[0];
+  if (!g) return null;
+  const st = g.steps.filter((s) => s.durete != null);
+  const max = Math.max(...st.map((s) => s.durete)), min = Math.min(...st.map((s) => s.durete));
+  const nature = st.map((s) => (s.durete >= 0.6 * max ? "dur" : "tendre"));
+  const ep = st.every((s) => s.ep != null) ? " Épaisseurs médianes : " + st.map((s) => nf(s.ep, 1)).join(" / ") + " mm." : "";
+  return {
+    val: st.map((s) => nf(s.durete, 0)).join(" / ") + '<span class="unit">A par mm/tr</span>',
+    texte: "Courant de broche divisé par l'avance par tour, étape par étape (recette <b>" + esc(g.code) + "</b>) : c'est l'effort pour enlever un même volume, donc la dureté de la couche. " +
+      (max / min >= 2 ? "Empilement " + nature.join(" / ") + " : la couche la plus tendre demande " + nf(max / min, 1) + " fois moins d'effort." : "Les couches ont une dureté proche.") + ep,
+  };
+}
+
+// ------------------------------------------------ constats (« À retenir »)
+function exInsights(M) {
+  const out = [], add = (lbl, val, texte, ancre) => out.push({ lbl, val, texte, ancre });
+  if (!M.n) return out;
+  const R = M.rec, recette = M.rg === "recette" ? "recette" : "programme";
+  if (M.nJudged) {
+    let t;
+    if (!M.nNok) t = "Aucune anomalie : le verdict du boîtier ne départage pas les cycles, il faut regarder les mesures.";
+    else {
+      t = plural(M.nNok, "cycle") + " en anomalie sur " + nf(M.nJudged, 0) + ".";
+      const pire = R.filter((g) => g.nok && g.judged >= 5).sort((a, b) => b.pct - a.pct || b.nok - a.nok)[0];
+      if (pire && R.length > 1) t += " La " + recette + " <b>" + esc(pire.code) + "</b> en compte " + nf(pire.pct, 0) + " % (" + pire.nok + " sur " + pire.judged + "), soit " + nf((100 * pire.nok) / M.nNok, 0) + " % de toutes les anomalies.";
+      const fin = exNokSteps(M);
+      if (fin) t += " Elles s'écartent surtout à l'étape " + fin.n + ", arrêtée sur le code " + esc(fin.code) + " (" + plural(fin.k, "cycle") + ").";
+    }
+    add("Conformité", withUnit(M.pctOk, "%"), t, "result");
+  }
+  const cand = R.filter((g) => g.judged >= 20);
+  if (cand.length >= 2) {
+    const best = [...cand].sort((a, b) => a.pct - b.pct || (a.medT ?? 1e9) - (b.medT ?? 1e9))[0];
+    const reglage = String(best.lab).split(" · ")[1];
+    add("Meilleure " + recette, esc(best.code), (reglage ? esc(reglage) + " (tr/min / mm par tour, étape par étape) : " : "") + nf(100 - best.pct, 1) + " % de conformes sur " + best.judged +
+      " cycles, temps de cycle médian " + nf(best.medT, 1) + " s." + (best.essais.length ? " Essai " + best.essais.join(", ") + "." : "") + " À comparer à foret et empilement égaux : voir les essais.", "recettes");
+  }
+  if (M.rg === "recette") {
+    const parProg = new Map();
+    for (const g of R) if (g.p) { const k = "Pset " + g.p.pset_nb + " v" + g.p.pset_version; parProg.set(k, (parProg.get(k) || 0) + 1); }
+    const [prog, nb] = [...parProg.entries()].sort((a, b) => b[1] - a[1])[0] || [];
+    if (nb >= 2) add("Traçabilité", plural(nb, "recette"), nb + " réglages différents portent le même numéro de programme (<b>" + esc(prog) + "</b>) : la version du Pset ne change pas quand on modifie vitesses ou avances. Pour comparer des cycles, il faut les regrouper par recette, pas par Pset.", "recettes");
+  }
+  const avecEssai = R.filter((g) => g.essais.length);
+  if (avecEssai.length >= 2) {
+    const seul = avecEssai.filter((g) => g.essais.length === 1).length;
+    if (seul / avecEssai.length >= 0.6) add("Effets mêlés", seul + " sur " + avecEssai.length, seul + " " + recette + "s sur " + avecEssai.length + " n'ont été essayées qu'avec un seul essai DT, donc un seul foret. L'effet du réglage et celui du foret sont mêlés : une " + recette + " « mauvaise » peut cacher un foret mauvais.", "essais");
+  }
+  const mat = exMatiere(M);
+  if (mat) add("Matière traversée", mat.val, mat.texte, "matiere");
+  const fits = exWearFits(M).sort((a, b) => Math.abs(b.fit.r) - Math.abs(a.fit.r));
+  if (fits.length) {
+    const w = fits[0], pct = w.fit.intercept ? (100 * w.fit.slope * 100) / w.fit.intercept : null;
+    add("Usure", signe(w.fit.slope * 100, 2) + '<span class="unit">A / 100 trous</span>', Math.abs(w.fit.r) >= 0.3
+      ? "Pour la " + recette + " <b>" + esc(w.code) + "</b>, le couple max " + (w.fit.slope > 0 ? "augmente" : "baisse") + " de " + nf(Math.abs(w.fit.slope * 100), 2) + " A tous les 100 trous" +
+        (pct != null ? " (" + signe(pct, 0) + " % par rapport à un foret neuf)" : "") + ", corrélation r = " + nf(w.fit.r, 2) + ". C'est le signe d'usure le plus net."
+      : "Le couple max ne suit pas le compteur de trous (r = " + nf(w.fit.r, 2) + " au mieux) : l'usure ne se lit pas sur ce KPI dans la sélection.", "usure");
+  }
+  if (M.tools.length) {
+    const lives = M.tools.filter((t) => t.changed).map((t) => t.life);
+    add("Forets", plural(M.tools.length, "foret") + '<span class="unit">repérés</span>', lives.length
+      ? plural(lives.length, "changement") + " repéré(s) : le compteur local 1 repart de zéro. Un foret a percé en médiane " + nf(medianOf(lives), 0) + " trous avant d'être changé (de " + nf(Math.min(...lives), 0) + " à " + nf(Math.max(...lives), 0) + ")."
+      : "Le compteur local 1 n'est jamais remis à zéro dans la sélection : un seul foret par tête, ou des changements non enregistrés.", "usure");
+  }
+  if (M.cov.ratio != null && M.cov.span >= 20) {
+    add("Couverture", withUnit(100 * Math.min(1, M.cov.ratio), "%", 0), M.cov.ratio >= 0.98
+      ? "Les compteurs des têtes avancent de " + nf(M.cov.span, 0) + " trous et la base contient autant de cycles : chaque trou percé a été exporté."
+      : "Les compteurs des têtes avancent de " + nf(M.cov.span, 0) + " trous sur la période, la base en contient " + nf(M.cov.n, 0) + " : " + nf(M.cov.span - M.cov.n, 0) + " trous percés n'ont pas été exportés ou déposés.", "orga");
+  }
+  if (M.days.length) {
+    const parJour = [...M.count("jour").entries()].sort((a, b) => b[1] - a[1])[0];
+    const courts = M.gaps.filter((g) => g < 30);
+    const cadence = courts.length >= 10 ? medianOf(courts) : null;
+    add("Rythme", withUnit(M.n / M.days.length, "cycles / jour", M.n / M.days.length < 10 ? 1 : 0), "En moyenne sur les " + plural(M.days.length, "jour") + " où l'on a percé. Journée la plus chargée : " + exDay(parJour[0]) + " (" + parJour[1] + " cycles)." +
+      (cadence != null ? " En série, un trou toutes les " + (cadence < 1 ? nf(cadence * 60, 0) + " s" : nf(cadence, 1) + " min") + "." : ""), "temps");
+  }
+  if (M.heads.size >= 2) {
+    const ecarts = [...groupMap(M.rows, "head_name")].map(([h, rs]) => ({ h, n: rs.length, v: medianOf(rs.map((r) => exIndex(M, r, "couple_max_a"))) }))
+      .filter((x) => x.n >= 20 && x.v != null).sort((a, b) => Math.abs(b.v - 100) - Math.abs(a.v - 100));
+    if (ecarts.length >= 2 && Math.abs(ecarts[0].v - 100) >= 3) add("Écart entre têtes", signe(ecarts[0].v - 100, 0) + '<span class="unit">%</span>', "La tête <b>" + esc(ecarts[0].h) + "</b> perce avec un couple max " + (ecarts[0].v > 100 ? "supérieur" : "inférieur") + " de " + nf(Math.abs(ecarts[0].v - 100), 0) + " % au cycle typique de ses " + recette + "s. À suivre : réglage de la tête, foret différent ou usure.", "derive");
+  }
+  for (const [box, rs] of groupMap(M.rows, "box_sn")) {
+    for (let i = 1; i < rs.length; i++) {
+      if (rs[i].firmware && rs[i - 1].firmware && rs[i].firmware !== rs[i - 1].firmware) {
+        const av = medianOf(rs.slice(0, i).map((r) => exIndex(M, r, "couple_max_a"))), ap = medianOf(rs.slice(i).map((r) => exIndex(M, r, "couple_max_a")));
+        add("Firmware", esc(rs[i].firmware), "Le boîtier <b>" + esc(box) + "</b> passe de " + esc(rs[i - 1].firmware) + " à " + esc(rs[i].firmware) + " le " + exDay(rs[i].jour) + "." +
+          (av && ap ? " Couple max relatif avant / après : " + nf(av, 0) + " / " + nf(ap, 0) + " (" + signe(ap - av, 0) + " points)." : ""), "derive");
+        break;
+      }
+    }
+  }
+  const dense = denseRange(M.rows, "started_at");
+  if (dense) {
+    const hors = M.rows.filter((r) => r.jour < dense[0] || r.jour > dense[1]);
+    if (hors.length) add("Cycles isolés", nf(hors.length, 0), plural(hors.length, "cycle") + " loin de la période principale (" + [...new Set(hors.map((r) => r.jour.slice(0, 4)))].join(", ") + ") : à écarter des analyses dans le temps, ou à filtrer avec les dates.", "temps");
+  }
+  const constants = M.profile.filter((f) => !f.step && f.constat === "constant");
+  if (constants.length >= 3) add("Champs sans information", nf(constants.length, 0), "Ces champs ont la même valeur pour tous les cycles : " + constants.slice(0, 6).map((f) => esc(f.label)).join(", ") + (constants.length > 6 ? "…" : "") + ". Inutile de les analyser dans cette sélection.", "orga");
+  return out;
+}
+
+function exQuestions(M) {
+  const q = [];
+  const codes = new Set();
+  for (const r of M.rows) for (let n = 1; n <= (r.nb_etapes || 0); n++) { const c = r["e" + n + "_stop_code"]; if (c != null) codes.add(c); }
+  if (codes.size && !(EX.bits || []).length) q.push("<b>Codes d'arrêt.</b> Que signifient les valeurs " + [...codes].sort((a, b) => a - b).map((c) => nf(c, 0)).join(", ") + " ? Chaque code est une somme de bits (2048 = bit 11) : il faut la liste des bits et leur sens (la table stop_code_bit est vide).");
+  q.push("<b>Unités.</b> Couple et poussée sont exportés en ampères (courant moteur). Existe-t-il, par tête, un facteur pour passer en N·m et en N (rapports M1 et M2 de la tête et du moteur) ?");
+  q.push("<b>Matière.</b> Quel empilement (titane, aluminium, composite, épaisseurs) correspond à chaque essai ou programme ? La colonne Material du programme vaut 0 partout.");
+  q.push("<b>Verdict « Cycle OK ».</b> Sur quels critères le boîtier le décide-t-il, et existe-t-il une mesure de qualité du trou (diamètre, bavure, délaminage) à rapprocher des cycles ?");
+  const lc2 = M.rows.filter((r) => estNum(r.head_local_counter_2) && estNum(r.head_local_counter_1));
+  if (lc2.length && lc2.some((r) => r.head_local_counter_2 !== r.head_local_counter_1)) q.push("<b>Compteur local 2.</b> Que compte-t-il ? Il ne suit pas toujours le compteur local 1 (remis à zéro à d'autres moments).");
+  else if (lc2.length) q.push("<b>Compteurs locaux 1 et 2.</b> Ils sont identiques dans la sélection : le compteur 1 est-il bien remis à zéro à chaque changement de foret ?");
+  if (M.cov.ratio != null && M.cov.ratio < 0.98 && M.cov.span >= 20) q.push("<b>Trous manquants.</b> Les compteurs avancent de " + nf(M.cov.span, 0) + " trous mais " + nf(M.cov.n, 0) + " cycles sont en base : les autres n'ont-ils pas été exportés, ou ont-ils été écartés ?");
+  const sansEssai = M.n - M.nEssai;
+  if (M.nEssai && sansEssai) q.push("<b>Cycles hors essai.</b> " + plural(sansEssai, "cycle") + " ne sont rattachés à aucun dossier DT : est-ce de la production, ou des essais déposés sans leur dossier ?");
+  const constants = M.profile.filter((f) => !f.step && f.constat === "constant").map((f) => f.label);
+  if (constants.length) q.push("<b>Champs constants.</b> " + constants.slice(0, 8).map(esc).join(", ") + (constants.length > 8 ? "…" : "") + " ne varient jamais : sont-ils renseignés par le boîtier, ou fixés par défaut ?");
+  if (M.rg === "recette" && M.rec.length >= 2) q.push("<b>Plan d'essais.</b> Comment ont été choisies les recettes testées, et dans quel ordre ? Ont-elles été changées en même temps que le foret ?");
+  return q;
+}
+
+// ------------------------------------------------ squelette de l'onglet
+const EX_SECTIONS = [
+  ["vue", "Vue d'ensemble"], ["retenir", "À retenir"], ["orga", "Organisation"], ["temps", "Activité"], ["recettes", "Recettes"],
+  ["matiere", "Matière"], ["result", "Résultats"], ["mesures", "Mesures"], ["usure", "Usure"], ["derive", "Dérives"],
+  ["essais", "Essais"], ["signature", "Signature"], ["questions", "Questions"],
+];
+function exSkeleton() {
+  const sec = (id, titre, lead, body) => '<section class="ex-sec" id="ex-' + id + '"><h2>' + titre + '</h2><p class="lead">' + lead + "</p>" + body + "</section>";
+  const tile = (id, titre, desc, o = {}) => '<article class="tile' + (o.full ? " full" : "") + '"><div class="head"><h3>' + titre + "</h3>" + (o.outil || "") + '</div><div class="desc">' + desc + "</div>" +
+    (o.html ?? '<div class="plot' + (o.short ? " short" : "") + '" data-chart="' + id + '"' + (o.h ? ' style="height:' + o.h + 'px"' : "") + "></div>") + "</article>";
+  const table = (id, entier) => '<div class="tablewrap" id="ex-t-' + id + '"' + (entier ? ' style="max-height:none"' : "") + "></div>";
+  const mesures = EX_MESURES.map((m) => '<option value="' + m.key + '">' + m.nom + "</option>").join("");
+  return '<p class="intro" id="ex-intro"></p><nav class="ex-toc" aria-label="Sections de la page">' +
+    EX_SECTIONS.map(([id, t]) => '<a href="#ex-' + id + '">' + t + "</a>").join("") + "</nav>" +
+    sec("vue", "Vue d'ensemble", "Les chiffres clés de la sélection.", '<div class="kpis ex-kpis" id="ex-kpis"></div>') +
+    sec("retenir", "À retenir", "Constats calculés automatiquement à partir des données. Ce sont des pistes à vérifier, pas des conclusions : chacun renvoie à la section qui le détaille.", '<div class="ex-insights" id="ex-insights"></div>') +
+    sec("orga", "Comment les données sont organisées",
+      "Un boîtier de perçage exporte <b>un fichier par trou percé</b> : c'est un <i>cycle</i>. Chaque cycle pointe vers le matériel qui l'a percé (boîtier, moteur, tête), la recette suivie et, s'il a été déposé avec son dossier, l'essai. Il contient ses résultats étape par étape et les mesures enregistrées 100 fois par seconde.",
+      '<div class="ex-model" id="ex-model"></div><div class="grid">' +
+      tile("anatomie", "Les dix sections d'un fichier exporté", "Ce que contient chaque section, où elle est rangée en base, et à quoi elle sert pour l'analyse.", { full: true, html: table("anatomie", true) }) +
+      tile("sankey", "Qui perce avec quoi", "Chaque bande est un ensemble de cycles : du boîtier à la tête (en gris), puis de la tête à la recette (couleur de la recette). Une tête reliée à plusieurs boîtiers a changé de machine ; une recette suivie par plusieurs têtes permet de les comparer à réglage égal.") +
+      tile("timeline", "Qui perce quand", "Un point par cycle. Les croix marquent les anomalies. Cliquez un point pour ouvrir le cycle.",
+        { outil: '<label class="field" style="flex-direction:row;align-items:center;gap:6px">Lignes <select id="ex-axe" style="height:var(--control-sm)"><option value="recette">Recette</option><option value="essai">Essai</option><option value="head_name">Tête</option><option value="box_sn">Boîtier</option><option value="programme">Programme</option></select></label>' }) +
+      tile("profil", "Profil des champs", "Pour chaque champ : la part de cycles où il est rempli, le nombre de valeurs différentes et l'étendue. Un champ constant n'apporte rien ; un champ qui varie est un candidat KPI. Les champs par étape sont à la fin.", { full: true, html: table("profil") }) +
+      "</div>") +
+    sec("temps", "Activité dans le temps", "Quand perce-t-on, à quel rythme, avec quelles recettes ? C'est le socle pour suivre une dérive : une variation n'a de sens que rapportée au volume et à la période.",
+      '<div class="grid">' +
+      tile("volume", "Cycles dans le temps", "Nombre de cycles par jour (par semaine sur une longue période), coloré par recette : on y lit l'enchaînement des essais.", { full: true }) +
+      tile("heures", "Jours et heures de perçage", "Cycles par jour de la semaine et heure de début : fait apparaître les équipes et les créneaux de travail.") +
+      tile("ecarts", "Temps entre deux cycles", "Écart entre deux cycles consécutifs d'un même boîtier. À gauche, la cadence en série ; à droite, les pauses (nuits, week-ends, changement de montage).") +
+      "</div>") +
+    sec("recettes", "Les recettes de perçage",
+      "Une recette est le contenu exact du programme suivi : pour chaque étape, la vitesse de rotation (tr/min), l'avance par tour (mm/tr) et la lubrification. Les codes R1, R2… suivent l'ordre de première utilisation. Deux cycles ne se comparent qu'à recette égale ; en surligné, ce qui change par rapport à la recette précédente.",
+      '<div class="grid">' +
+      tile("t-recettes", "Les réglages testés", "Une ligne par étape. Épaisseur : distance parcourue dans l'étape (médiane des cycles non en anomalie). Dureté : courant de broche moyen ÷ avance par tour.", { full: true, html: table("recettes") }) +
+      tile("plan", "Plan d'essais : vitesse et avance de chaque étape", "Un point par recette et par étape ; sa taille suit le nombre de cycles, sa couleur le taux d'anomalies. Les zones sans point sont des réglages jamais essayés.", { full: true, h: 340 }) +
+      tile("nokRecette", "Anomalies par recette", "Part des cycles jugés en anomalie par le boîtier, recette par recette (survolez pour le détail).") +
+      tile("tempsRecette", "Temps de cycle par recette", "Médiane, quartiles et valeurs atypiques. Une boîte étroite = une recette régulière.") +
+      "</div>") +
+    sec("matiere", "La matière traversée",
+      "Les exports ne disent pas quelle matière est percée, mais le signal le trahit : à avance égale, une matière dure demande plus de courant de broche. L'indice de dureté (courant ÷ avance par tour) se compare d'une étape à l'autre ; la distance parcourue dans une étape qui s'arrête en sortie de couche donne son épaisseur.",
+      '<div class="grid">' +
+      tile("durete", "Indice de dureté par étape", "Courant de broche moyen divisé par l'avance par tour (A par mm/tr). Des valeurs proches = même matière.") +
+      tile("epaisseur", "Épaisseur traversée par étape", "Distance parcourue pendant l'étape, en mm (médiane). Leur somme donne la profondeur du trou.") +
+      tile("dureeEtape", "Durée des étapes", "Durée de chaque étape, par recette. Une étape qui s'allonge à recette égale signale une matière plus dure ou un foret usé.", { full: true }) +
+      "</div>") +
+    sec("result", "Résultats et arrêts",
+      "Le boîtier juge chaque cycle : Conforme ou Anomalie. Chaque étape se termine sur un code d'arrêt qui dit pourquoi elle s'est arrêtée (profondeur atteinte, sortie de matière détectée, seuil d'effort, casse…).",
+      '<div class="grid">' +
+      tile("nokTete", "Anomalies par tête", "Part des cycles en anomalie pour chaque tête de perçage.") +
+      tile("nokEssai", "Anomalies par essai", "Part des cycles en anomalie pour chaque dossier DT (un fournisseur, un foret).") +
+      tile("codes", "Codes d'arrêt par étape", "Nombre d'étapes terminées sur chaque code. Un code est une somme de bits (2048 = bit 11) ; le survol donne les bits. Les codes rares sont ceux à creuser.") +
+      tile("finRecette", "Fin des étapes par recette", "Part des cycles de chaque recette dont l'étape s'est arrêtée sur ce code (le nombre de cycles est écrit dans la case).") +
+      "</div>") +
+    sec("mesures", "Les mesures : ordres de grandeur et liens",
+      "Couple et poussée sont exportés en <b>ampères</b> : c'est le courant des moteurs de rotation et d'avance, image de l'effort. Ils se comparent entre cycles, pas à une valeur en N·m. Les couleurs suivent la recette : une distribution à plusieurs bosses mélange souvent plusieurs recettes.",
+      '<div class="ex-legend" id="ex-legend"></div><div class="grid three">' +
+      ["couple_max_a", "poussee_max_a", "cycle_time_s", "energie_kj", "couple_moy_a", "distance_mm"].map((k) => tile("hist:" + k, label(k), "Répartition sur les cycles.", { short: true })).join("") +
+      '</div><div class="grid" style="margin-top:var(--space-3)">' +
+      tile("corr", "Ce qui varie ensemble", "Corrélation entre les mesures, calculée à recette égale (l'effet de la recette est retiré). Bleu : quand l'une monte, l'autre baisse ; orange : elles montent ensemble. Une case vive hors de la diagonale signale deux mesures redondantes, ou une mesure liée à l'usure (compteur local 1).", { full: true, h: 460 }) +
+      "</div>") +
+    sec("usure", "Usure du foret",
+      "Le compteur local 1 de la tête compte les trous depuis sa remise à zéro, faite au changement de foret. Il permet de suivre chaque foret sans qu'il soit identifié dans les exports : quand le compteur redescend, le foret a été changé. Le foret coûte souvent plus cher que l'unité de perçage : savoir quand le changer est l'enjeu.",
+      '<div class="kpis ex-kpis" id="ex-forets-kpis"></div><div class="grid">' +
+      tile("dents", "Compteur de trous de chaque tête", "Chaque descente brutale est un changement de foret. Une pente longue sans descente = un foret qui dure.", { full: true }) +
+      tile("usureNuage", "Couple max selon le nombre de trous du foret", "Un point par cycle, une case par recette (les quatre plus utilisées). La droite est la tendance : sa pente est le KPI d'usure, en A gagnés tous les 100 trous. En rouge : les anomalies.", { full: true }) +
+      tile("usureCourbe", "Courbe d'usure moyenne", "Couple max en % de celui d'un foret neuf (moins de 20 trous), toutes recettes confondues : médiane et moitié centrale des cycles.") +
+      tile("vieForet", "Durée de vie des forets", "Nombre de trous percés par chaque foret avant son changement (forets changés dans la sélection).") +
+      tile("t-forets", "Les forets repérés", "Un foret = une période entre deux remises à zéro du compteur local 1 d'une tête.", { full: true, html: table("forets") }) +
+      "</div>") +
+    sec("derive", "Dérives dans le temps",
+      "Pour comparer des cycles de recettes différentes, chaque mesure est ramenée au cycle typique de sa recette : <b>indice 100 = médiane de la recette</b>. Au-dessus de 100, le cycle a demandé plus que d'habitude. Une dérive est une montée lente et durable, pas un point isolé.",
+      '<div class="toolbar"><label class="field">Mesure suivie <select id="ex-mesure">' + mesures + '</select></label></div><div class="grid">' +
+      tile("deriveLigne", "Indice au fil des cycles", "Points : chaque cycle. Ligne : médiane glissante, par boîtier. La bande grise couvre 80 % des cycles.", { full: true }) +
+      tile("deriveCarte", "Carte des écarts par recette et par période", "Médiane de l'indice par recette et par jour (par semaine sur une longue période). Orange : au-dessus de l'habitude ; bleu : en dessous.", { full: true }) +
+      "</div>") +
+    sec("essais", "Les essais (dossiers DT)",
+      "Un essai regroupe les exports déposés dans un dossier « DT… » : un fournisseur, une désignation, un diamètre de foret. C'est là que se cherche la meilleure combinaison foret + réglage, à condition de comparer à recette égale.",
+      '<div class="notice" id="ex-essais-note" hidden></div><div class="grid">' +
+      tile("t-essais", "Résumé par essai", "Médianes sur les cycles de l'essai.", { full: true, html: table("essais") }) +
+      tile("essaiRecette", "Quelles recettes avec quel essai", "Nombre de cycles par essai et par recette. Une recette présente dans un seul essai ne permet pas de séparer l'effet du réglage de celui du foret.") +
+      tile("essaiBulle", "Effort et durée par essai", "Couple max médian selon le temps de cycle médian ; la taille suit le nombre de cycles, la couleur le fournisseur. En bas à gauche : rapide et peu d'effort.") +
+      tile("essaiBox", "Couple max par essai", "Médiane, quartiles et valeurs atypiques du couple max, essai par essai.", { full: true }) +
+      "</div>") +
+    sec("signature", "La signature de perçage",
+      "La signature est la forme de l'effort le long de la profondeur. Ses paliers correspondent aux couches traversées. On trace ici des cycles conformes d'une même recette, répartis du foret le plus neuf au plus usé : la signature médiane sert de référence, l'écart à celle-ci est la dérive. Les mesures brutes sont lues en base à la demande.",
+      '<div class="toolbar"><label class="field">Recette <select id="ex-sig-rec"></select></label><label class="field">Cycles <select id="ex-sig-n"><option>6</option><option selected>10</option><option>16</option></select></label>' +
+      '<button class="primary" id="ex-sig-go">Tracer la signature</button><span class="status" id="ex-sig-status" aria-live="polite"></span></div>' +
+      '<div class="grid">' + tile("signature", "Couple et poussée selon la profondeur", "Clair : foret le plus neuf ; foncé : le plus usé. Trait épais : signature médiane.", { full: true, h: 580 }) + "</div>") +
+    sec("questions", "Questions ouvertes pour Desoutter", "Ce que les données ne disent pas seules, à poser lors de la séance de questions.", '<ol class="ex-list" id="ex-questions"></ol>');
+}
+
+// Tableau statique : sections d'un export, tables en base, usage.
+const EX_ANATOMIE = [
+  ["General Infos", "Version, date et heure, identifiant du cycle, fréquence d'échantillonnage (100 Hz), séparateur décimal", "cycle", "L'horodatage : suivre les dérives dans le temps"],
+  ["Control Box Datas", "Boîtier : nom, numéro de série, firmware, heures de fonctionnement, date de maintenance", "control_box, cycle", "Comparer les machines, mesurer l'effet d'une mise à jour"],
+  ["Motor Datas", "Moteur : type, numéro de série, rapports de réduction, heures de fonctionnement", "motor, cycle", "Souvent constant ; utile pour convertir les ampères"],
+  ["Head Datas", "Tête : type, puce RFID, compteur global, compteurs locaux 1 et 2", "head, cycle", "Compteur local 1 = trous depuis le changement de foret : l'usure"],
+  ["Pset", "Numéro et version du programme", "program", "Regrouper les cycles ; insuffisant seul (voir les recettes)"],
+  ["Cycle Parameters", "Limites, rétraction, détection de casse, prélubrification", "program", "Le plus souvent constants"],
+  ["Program", "Par étape : course, vitesse (tr/min), avance (mm/s et mm/tr), seuils de couple et de poussée, lubrification, matière", "program_step", "La recette : ce qui a été demandé"],
+  ["Results", "Temps de cycle, distance totale, verdict « Cycle OK »", "cycle", "Le résultat : Conforme ou Anomalie"],
+  ["Step Results", "Par étape : code d'arrêt, durée, distances, courants max et à vide", "cycle_step_result", "Où et pourquoi une étape s'arrête ; épaisseur des couches"],
+  ["Datas", "Une ligne par centième de seconde : position, courant de couple et de poussée (et à vide), étape, code d'arrêt, puissance, gap", "cycle_sample (agrégats : cycle_step_stats)", "La signature du perçage, la matière traversée"],
+];
+
+// ------------------------------------------------ rendu
+function renderExplo() {
+  const root = $("#tab-explo");
+  if (!EX.built) { root.innerHTML = exSkeleton(); EX.built = true; exBind(); }
+  if (EX.bits === null && sb) {
+    EX.bits = [];
+    sb.from("stop_code_bit").select("bit,label,is_fault").order("bit").then(({ data }) => { EX.bits = data || []; if (S.tab === "explo") $("#ex-questions").innerHTML = exQuestions(EX.M).map((x) => "<li>" + x + "</li>").join(""); });
+  }
+  const M = (EX.M = exModel(S.filtered));
+  $("#ex-intro").innerHTML = "Cette page sert à <b>comprendre les données</b> avant de les analyser : ce qu'elles contiennent, comment elles s'organisent et ce qui mérite d'être creusé. " +
+    "Tout est calculé sur la sélection en cours, <b>" + plural(M.n, "cycle") + "</b> : les filtres du haut s'appliquent ici aussi." +
+    (M.rg === "programme" ? " Les recettes n'ont pas pu être lues : les cycles sont regroupés par programme (Pset + version)." : "");
+  exKpis(M);
+  const ins = exInsights(M);
+  $("#ex-insights").innerHTML = ins.length ? ins.map((x) => '<article class="ex-insight"><div class="lbl">' + x.lbl + '</div><div class="val">' + x.val + "</div><p>" + x.texte + '</p><a href="#ex-' + x.ancre + '">Voir le détail</a></article>').join("")
+    : '<div class="notice">Aucun cycle dans la sélection.</div>';
+  $("#ex-model").innerHTML = exModelHtml(M);
+  $("#ex-t-anatomie").innerHTML = '<table class="data static"><thead><tr><th>Section</th><th>Contenu</th><th>En base</th><th>Pour l\'analyse</th></tr></thead><tbody>' +
+    EX_ANATOMIE.map((a) => "<tr><td><b>" + a[0] + '</b></td><td class="wrap">' + a[1] + "</td><td><code>" + a[2] + '</code></td><td class="wrap">' + a[3] + "</td></tr>").join("") + "</tbody></table>";
+  $("#ex-t-profil").innerHTML = exProfileHtml(M);
+  $("#ex-t-recettes").innerHTML = exRecettesHtml(M);
+  $("#ex-t-forets").innerHTML = exForetsHtml(M);
+  exForetsKpis(M);
+  $("#ex-t-essais").innerHTML = exEssaisHtml(M);
+  const note = $("#ex-essais-note");
+  note.hidden = M.nEssai > 0;
+  note.textContent = "Aucun cycle de la sélection n'est rattaché à un essai : les essais apparaissent quand les exports sont déposés avec leur dossier « DT… ».";
+  $("#ex-legend").innerHTML = exLegend(M, M.rg);
+  $("#ex-questions").innerHTML = exQuestions(M).map((x) => "<li>" + x + "</li>").join("");
+  // listes de choix
+  const axe = $("#ex-axe");
+  if (!EX.axe) EX.axe = M.groupes.size > 1 ? M.rg : M.heads.size > 1 ? "head_name" : "box_sn";
+  axe.value = EX.axe;
+  const rec = $("#ex-sig-rec"), avant = rec.value;
+  rec.innerHTML = M.rec.map((g) => '<option value="' + esc(g.lab) + '">' + esc(g.lab) + " · " + plural(g.n, "cycle") + "</option>").join("");
+  if (M.rec.some((g) => g.lab === avant)) rec.value = avant;
+  else if (M.rec.length) rec.value = [...M.rec].sort((a, b) => b.n - a.n)[0].lab;
+  $("#ex-mesure").value = EX.mesure;
+  // graphiques : tracés quand ils arrivent à l'écran (observe() rappelle aussi ceux déjà visibles)
+  if (!EX.io) EX.io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && exDraw(e.target)), { rootMargin: "400px 0px" });
+  EX.io.disconnect();
+  root.querySelectorAll("[data-chart]").forEach((el) => { el.dataset.dirty = "1"; EX.io.observe(el); });
+}
+function exRedraw(id) {
+  const el = $('#tab-explo [data-chart="' + id + '"]');
+  if (el) { el.dataset.dirty = "1"; exDraw(el); }
+}
+function exDraw(el) {
+  if (el.dataset.dirty !== "1" || !EX.M) return;
+  el.dataset.dirty = "0";
+  const [id, arg] = el.dataset.chart.split(":");
+  if (!EX.M.n) return exEmpty(el, "Aucun cycle dans la sélection.");
+  try { EX_CHARTS[id](el, EX.M, theme(), arg); }
+  catch (err) { console.error(err); exEmpty(el, "Graphique indisponible : " + esc(err.message)); }
+}
+function exPlot(el, traces, layout) {
+  if (!el.classList.contains("live")) { el.innerHTML = ""; el.classList.add("live"); }
+  layout.barcornerradius = layout.barcornerradius ?? 3;
+  Plotly.react(el, traces, layout, PCONF);
+  if (!el.exClick) {
+    el.exClick = true;
+    el.on("plotly_click", (ev) => { const k = ev.points?.[0]?.customdata?.[0]; if (typeof k === "string" && S.cycles.has(k)) openDetail(k); });
+  }
+}
+function exEmpty(el, msg) {
+  if (el.classList.contains("live")) { Plotly.purge(el); el.classList.remove("live"); el.exClick = false; }
+  el.innerHTML = '<div class="empty">' + msg + "</div>";
+}
+const exHeight = (el, h) => { el.style.height = h + "px"; };
+function exBind() {
+  $("#tab-explo").addEventListener("click", (e) => {
+    const a = e.target.closest('a[href^="#ex-"]');
+    if (!a) return;
+    e.preventDefault();
+    $(a.getAttribute("href"))?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  });
+  $("#ex-axe").addEventListener("change", (e) => { EX.axe = e.target.value; exRedraw("timeline"); });
+  $("#ex-mesure").addEventListener("change", (e) => { EX.mesure = e.target.value; exRedraw("deriveLigne"); exRedraw("deriveCarte"); });
+  $("#ex-sig-go").addEventListener("click", exSignature);
+}
+
+function exKpis(M) {
+  const t = sortedNums(M.rows, "cycle_time_s");
+  const badge = !M.nJudged ? "" : M.nNok
+    ? '<span class="badge nok">' + ico("octagon-x") + plural(M.nNok, "anomalie") + "</span>"
+    : '<span class="badge ok">' + ico("circle-check") + "Aucune anomalie</span>";
+  const progs = M.programmes.size;
+  const k = [
+    ["Cycles", nf(M.n, 0), "1 fichier = 1 cycle = 1 trou percé"],
+    ["Mesures", M.mesures >= 1e6 ? withUnit(M.mesures / 1e6, "millions", 1) : nf(M.mesures, 0), "relevées 100 fois par seconde · " + nf(M.n ? M.mesures / M.n : null, 0) + " par cycle"],
+    ["Période", M.days.length ? exDay(M.days[0]) : "—", M.days.length ? "au " + exDay(M.days.at(-1)) + " · " + plural(M.days.length, "jour") + " avec perçage" : ""],
+    ["Parc", M.boxes.size + " · " + M.heads.size, "boîtier(s) · tête(s) · " + plural(M.motors.size, "modèle") + " de moteur, " + plural(M.firmwares.size, "firmware")],
+    [M.rg === "recette" ? "Recettes" : "Programmes", nf(M.groupes.size, 0), M.rg === "recette" ? "réglages différents · sous " + plural(progs, "programme") + " (Pset + version)" : "Pset + version"],
+    ["Essais", nf(M.essais.size, 0), M.essais.size ? nf((100 * M.nEssai) / M.n, 0) + " % des cycles · " + plural(M.fournisseurs.size, "fournisseur") : "aucun cycle rattaché à un dossier DT"],
+    ["Conformes", M.pctOk == null ? "—" : withUnit(M.pctOk, "%"), badge],
+    ["Temps de cycle", withUnit(quantile(t, 0.5), "s"), t.length ? "médiane · 80 % entre " + nf(quantile(t, 0.1), 0) + " et " + nf(quantile(t, 0.9), 0) + " s" : ""],
+  ];
+  $("#ex-kpis").innerHTML = k.map(([l, v, s]) => '<div class="kpi"><div class="lbl">' + l + '</div><div class="val">' + v + '</div><div class="sub">' + s + "</div></div>").join("");
+}
+const sortedNums = (rows, k) => rows.map((r) => r[k]).filter(estNum).sort((a, b) => a - b);
+
+function exModelHtml(M) {
+  const ent = (titre, n, txt, cls = "") => '<div class="ex-ent ' + cls + '"><b><span>' + titre + '</span><span class="n">' + n + "</span></b><small>" + txt + "</small></div>";
+  const lien = (t) => '<div class="ex-link">↓ ' + t + "</div>";
+  const nbEtapesProg = M.rec.reduce((a, g) => a + (g.p ? g.p.steps.length : 0), 0);
+  const big = (v) => (v >= 1e6 ? nf(v / 1e6, 1) + " M" : nf(v, 0));
+  return '<div class="col"><h4>Le matériel</h4>' +
+    ent("Boîtier de commande", nf(M.boxes.size, 0), "Numéro de série, firmware, heures de fonctionnement") + lien("pilote") +
+    ent("Moteur (modèle)", nf(M.motors.size, 0), "Rotation (M1) et avance (M2), rapports de réduction") + lien("entraîne") +
+    ent("Tête de perçage", nf(M.heads.size, 0), "Puce RFID, compteurs de trous global et local") + lien("porte") +
+    ent("Foret (déduit)", nf(M.tools.length, 0), "Repéré par la remise à zéro du compteur local 1") + "</div>" +
+    '<div class="col"><h4>Le perçage</h4>' +
+    ent("Cycle = 1 trou = 1 fichier", nf(M.n, 0), "Date, verdict Conforme / Anomalie, temps de cycle, distance", "hub") + lien("découpé en") +
+    ent("Étapes réalisées", nf(M.etapes, 0), "Une par couche ou phase : durée, code d'arrêt, courants, distance") + lien("échantillonnées en") +
+    ent("Mesures à 100 Hz", big(M.mesures), "Position, courant de couple et de poussée, puissance, gap") + "</div>" +
+    '<div class="col"><h4>Le contexte</h4>' +
+    ent("Programme (Pset + version)", nf(M.programmes.size, 0), "Le numéro affiché par le boîtier") + lien("contient") +
+    ent("Recette", nf(M.rg === "recette" ? M.groupes.size : M.programmes.size, 0), "Réglages exacts : " + (nbEtapesProg ? plural(nbEtapesProg, "étape") + " programmées au total, " : "") + "vitesse, avance, lubrification, seuils") +
+    '<div class="ex-link">&nbsp;</div>' +
+    ent("Essai (dossier DT)", nf(M.essais.size, 0), "Fournisseur, désignation, diamètre du foret · " + nf(M.n ? (100 * M.nEssai) / M.n : 0, 0) + " % des cycles") + "</div>";
+}
+
+function exLegend(M, field) {
+  const cm = colorMap(field);
+  const present = new Set(M.rows.map((r) => cm.fold(r[field])));
+  const items = cm.order.filter((k) => present.has(k));
+  if (items.length < 2) return "";
+  return items.map((k) => '<span class="chip"><span class="sw" style="background:' + cm.color(k) + '"></span>' + esc(cm.name(k)) + "</span>").join("");
+}
+
+function exProfileHtml(M) {
+  const v = (f, x) => (x == null ? "—" : f.num ? nf(x, 3) : esc(x));
+  const ligne = (f) => "<tr><td>" + esc(f.label) + '</td><td class="num">' + nf(100 * f.rempli, 0) + ' %</td><td class="num">' + nf(f.distinct, 0) +
+    '</td><td class="num">' + v(f, f.min) + '</td><td class="num">' + (f.num ? v(f, f.med) : esc(String(f.top ?? "—")).slice(0, 40)) + '</td><td class="num">' + v(f, f.max) +
+    "</td><td>" + (f.constat === "varie" ? "varie" : "<b>" + f.constat + "</b>") + "</td></tr>";
+  return '<table class="data static"><thead><tr><th>Champ</th><th class="num">Rempli</th><th class="num">Valeurs</th><th class="num">Min</th><th class="num">Médiane (ou plus fréquente)</th><th class="num">Max</th><th>Constat</th></tr></thead><tbody>' +
+    M.profile.map(ligne).join("") + "</tbody></table>";
+}
+
+function exRecettesHtml(M) {
+  if (!M.rec.length) return '<div class="empty">Aucune recette dans la sélection.</div>';
+  const f = (x, d) => (x == null ? "—" : nf(x, d));
+  const PAR = [["rpm", 0], ["feed_mm_tr", 3], ["feed_mm_s", 3], ["stroke_mm", 1], ["lub_air", 1], ["lub_flow", 1]];
+  let prev = null;
+  const lignes = M.rec.map((g) => {
+    const steps = g.steps.length ? g.steps : [{ n: "—" }];
+    const html = steps.map((s, i) => {
+      const ps = s.ps, ancien = prev?.steps.find((x) => x.n === s.n)?.ps;
+      const cell = ([k, d]) => {
+        const chg = ps && ancien && ps[k] !== ancien[k];
+        return '<td class="num' + (chg ? " chg" : "") + '"' + (chg ? ' title="' + esc(prev.code) + " : " + f(ancien[k], d) + '"' : "") + ">" + f(ps?.[k], d) + "</td>";
+      };
+      const tete = i ? "" : '<td rowspan="' + steps.length + '"><b>' + esc(g.code) + "</b></td><td rowspan=\"" + steps.length + '">' + (g.p ? "Pset " + g.p.pset_nb + " v" + g.p.pset_version : esc(g.lab)) +
+        '</td><td rowspan="' + steps.length + '">' + (esc(g.essais.join(", ")) || "—") + '</td><td class="num" rowspan="' + steps.length + '">' + nf(g.n, 0) +
+        '</td><td class="num" rowspan="' + steps.length + '">' + (g.pct == null ? "—" : nf(100 - g.pct, 0) + " %") + '</td><td class="num" rowspan="' + steps.length + '">' + f(g.medT, 1) + "</td>";
+      return "<tr>" + tete + '<td class="num">' + s.n + "</td>" + PAR.map(cell).join("") + '<td class="num">' + f(s.ep, 1) + '</td><td class="num">' + f(s.cm, 2) + '</td><td class="num">' + f(s.durete, 0) + "</td></tr>";
+    }).join("");
+    prev = g;
+    return html;
+  }).join("");
+  return '<table class="data static"><thead><tr><th>Recette</th><th>Programme</th><th>Essai(s)</th><th class="num">Cycles</th><th class="num">Conformes</th><th class="num">Temps · s</th>' +
+    '<th class="num">Étape</th><th class="num">Vitesse · tr/min</th><th class="num">Avance · mm/tr</th><th class="num">Avance · mm/s</th><th class="num">Course · mm</th><th class="num">Lub. air</th><th class="num">Lub. débit</th>' +
+    '<th class="num">Épaisseur · mm</th><th class="num">Courant broche · A</th><th class="num">Dureté</th></tr></thead><tbody>' + lignes + "</tbody></table>";
+}
+
+function exForetsKpis(M) {
+  const lives = M.tools.filter((t) => t.changed).map((t) => t.life);
+  const k = [
+    ["Forets repérés", nf(M.tools.length, 0), plural(M.heads.size, "tête")],
+    ["Changements", nf(lives.length, 0), "remises à zéro du compteur local 1"],
+    ["Vie médiane", lives.length ? withUnit(medianOf(lives), "trous", 0) : "—", lives.length ? "de " + nf(Math.min(...lives), 0) + " à " + nf(Math.max(...lives), 0) + " trous" : "aucun foret changé dans la sélection"],
+    ["Trous exportés", M.cov.ratio == null ? "—" : withUnit(100 * Math.min(1, M.cov.ratio), "%", 0), M.cov.span ? nf(M.cov.n, 0) + " cycles pour " + nf(M.cov.span, 0) + " trous comptés" : ""],
+  ];
+  $("#ex-forets-kpis").innerHTML = k.map(([l, v, s]) => '<div class="kpi"><div class="lbl">' + l + '</div><div class="val">' + v + '</div><div class="sub">' + s + "</div></div>").join("");
+}
+function exForetsHtml(M) {
+  if (!M.tools.length) return '<div class="empty">Aucun compteur de trous dans la sélection.</div>';
+  const quand = (s) => s?.replace("T", " ").slice(0, 16);
+  return '<table class="data static"><thead><tr><th>Tête</th><th class="num">Monté au trou n°</th><th>Du</th><th>Au</th><th class="num">Cycles en base</th><th class="num">Trous percés</th><th class="num">Anomalies</th><th>Recette(s)</th><th>Essai(s)</th></tr></thead><tbody>' +
+    M.tools.map((t) => "<tr><td>" + esc(t.head) + '</td><td class="num">' + (t.mount == null ? "—" : nf(t.mount, 0)) + "</td><td>" + esc(quand(t.from)) + "</td><td>" + esc(quand(t.to)) +
+      '</td><td class="num">' + nf(t.rows.length, 0) + '</td><td class="num">' + (t.changed ? nf(t.life, 0) : "≥ " + nf(t.last + 1, 0) + " (en place)") + '</td><td class="num">' + nf(t.nok, 0) +
+      "</td><td>" + esc([...new Set(t.rows.map((r) => rcode(r[M.rg])))].sort((a, b) => rcodeNum(a) - rcodeNum(b)).join(", ")) + "</td><td>" + esc([...new Set(t.rows.map((r) => dtCode(r.essai)).filter(Boolean))].join(", ") || "—") + "</td></tr>").join("") +
+    "</tbody></table>";
+}
+
+function exEssais(M) {
+  return [...groupMap(M.rows.filter((r) => r.essai), "essai")].map(([lib, rows]) => {
+    const judged = rows.filter((r) => r.cycle_ok), nok = judged.filter((r) => r.cycle_ok === "NOK").length;
+    return {
+      lib, code: dtCode(lib), rows, n: rows.length, fournisseur: rows[0].fournisseur, designation: rows[0].designation, diametre: rows[0].diametre,
+      from: rows[0].jour, to: rows.at(-1).jour, pctOk: judged.length ? 100 - (100 * nok) / judged.length : null,
+      recettes: [...new Set(rows.map((r) => rcode(r[M.rg])))].sort((a, b) => rcodeNum(a) - rcodeNum(b)),
+      medT: medianOf(rows.map((r) => r.cycle_time_s)), medC: medianOf(rows.map((r) => r.couple_max_a)),
+      medP: medianOf(rows.map((r) => r.poussee_max_a)), medE: medianOf(rows.map((r) => r.energie_kj)),
+    };
+  }).sort((a, b) => String(a.code).localeCompare(String(b.code), "fr", { numeric: true }));
+}
+function exEssaisHtml(M) {
+  const E = exEssais(M);
+  if (!E.length) return '<div class="empty">Aucun essai dans la sélection.</div>';
+  const f = (x, d) => (x == null ? "—" : nf(x, d));
+  return '<table class="data static"><thead><tr><th>Essai</th><th>Fournisseur</th><th>Désignation</th><th>Diamètre</th><th class="num">Cycles</th><th>Période</th><th>Recettes</th>' +
+    '<th class="num">Conformes</th><th class="num">Temps · s</th><th class="num">Couple max · A</th><th class="num">Poussée max · A</th><th class="num">Énergie · kJ</th></tr></thead><tbody>' +
+    E.map((e) => "<tr><td><b>" + esc(e.code) + "</b></td><td>" + esc(e.fournisseur ?? "—") + "</td><td>" + esc(e.designation ?? "—") + "</td><td>" + esc(e.diametre ?? "—") +
+      '</td><td class="num">' + nf(e.n, 0) + "</td><td>" + exDay(e.from) + (e.to !== e.from ? " → " + exDay(e.to) : "") + "</td><td>" + esc(e.recettes.join(", ")) +
+      '</td><td class="num">' + (e.pctOk == null ? "—" : nf(e.pctOk, 0) + " %") + '</td><td class="num">' + f(e.medT, 1) + '</td><td class="num">' + f(e.medC, 2) +
+      '</td><td class="num">' + f(e.medP, 2) + '</td><td class="num">' + f(e.medE, 2) + "</td></tr>").join("") + "</tbody></table>";
+}
+
+// ------------------------------------------------ graphiques
+const EX_GAP_BINS = [[1, "< 1 min"], [2, "1 à 2 min"], [5, "2 à 5 min"], [15, "5 à 15 min"], [60, "15 min à 1 h"], [240, "1 à 4 h"], [1440, "4 h à 1 j"], [4320, "1 à 3 j"], [Infinity, "> 3 j"]];
+function exBars(field, nomVide) {
+  return (el, M, T) => {
+    if (!M.nNok) return exEmpty(el, "Aucune anomalie dans la sélection.");
+    const m = new Map();
+    for (const r of M.rows) {
+      if (!r.cycle_ok) continue;
+      const v = field === "essai" ? dtCode(r.essai) : field === M.rg ? rcode(r[field]) : r[field];
+      const k = v ?? nomVide, a = m.get(k) || { k, n: 0, nok: 0, lab: r[field] ?? nomVide };
+      a.n++; if (r.cycle_ok === "NOK") a.nok++;
+      m.set(k, a);
+    }
+    const rates = [...m.values()].map((a) => ({ ...a, pct: (100 * a.nok) / a.n }));
+    if (rates.length < 2) return exEmpty(el, rates.length ? esc(String(rates[0].k)) + " : " + nf(rates[0].pct, 1) + " % de cycles en anomalie (" + rates[0].nok + " sur " + rates[0].n + "). Une seule valeur, rien à comparer." : "Aucune donnée.");
+    rates.sort((a, b) => a.pct - b.pct || a.n - b.n);
+    exHeight(el, Math.max(240, rates.length * 24 + 70));
+    const L = baseLayout({ margin: { l: 8, r: 16, t: 8, b: 40 }, hovermode: "closest" });
+    L.xaxis.title.text = "% de cycles en anomalie"; L.xaxis.ticksuffix = " %"; L.xaxis.rangemode = "tozero";
+    L.yaxis.type = "category"; L.yaxis.showline = false;
+    exPlot(el, [{
+      type: "bar", orientation: "h", y: rates.map((a) => a.k), x: rates.map((a) => a.pct), customdata: rates.map((a) => [a.nok, a.n, String(a.lab)]),
+      marker: { color: T.critical }, hovertemplate: "%{customdata[2]}<br>%{x:.1f} % · %{customdata[0]} sur %{customdata[1]} cycles<extra></extra>",
+    }], L);
+  };
+}
+function exBoxes(rowsOf, key, ytitre) {
+  return (el, M, T) => {
+    const groups = rowsOf(M).filter((g) => g.rows.some((r) => estNum(r[key])));
+    if (!groups.length) return exEmpty(el, "Aucune valeur dans la sélection.");
+    const L = baseLayout({ showlegend: false, margin: { l: 52, r: 12, t: 8, b: 40 } });
+    L.xaxis.type = "category"; L.yaxis.title.text = ytitre;
+    exPlot(el, groups.map((g) => ({
+      type: "box", name: g.code, y: g.rows.map((r) => r[key]), boxpoints: "outliers", customdata: g.rows.map((r) => [r.key, r.source_file]),
+      marker: { color: T.series[0], size: 5 }, line: { color: T.series[0], width: 1.5 }, fillcolor: "rgba(0,0,0,0)",
+      hovertemplate: esc(String(g.lab ?? g.lib)) + "<br>%{y}<extra></extra>",
+    })), L);
+  };
+}
+function exStepHeat(valeur, titre, dec) {
+  return (el, M, T) => {
+    const R = M.rec.filter((g) => g.steps.some((s) => valeur(s) != null));
+    if (!R.length) return exEmpty(el, M.rg === "recette" ? "Valeur indisponible : réglages ou distances par étape absents." : "Les recettes n'ont pas pu être lues.");
+    const nmax = Math.max(...R.map((g) => g.steps.length));
+    const x = Array.from({ length: nmax }, (_, i) => "Étape " + (i + 1));
+    const z = R.map((g) => x.map((_, i) => valeur(g.steps[i] || {}) ?? null));
+    exHeight(el, Math.max(240, R.length * 28 + 80));
+    const L = baseLayout({ margin: { l: 8, r: 8, t: 8, b: 36 } });
+    L.yaxis.type = "category"; L.yaxis.autorange = "reversed"; L.yaxis.showline = false; L.xaxis.showline = false; L.xaxis.side = "top";
+    exPlot(el, [{
+      type: "heatmap", x, y: R.map((g) => g.code), z, colorscale: seqScale(T), xgap: 2, ygap: 2, colorbar: colorbar(T, titre),
+      text: z.map((row) => row.map((v) => (v == null ? "" : nf(v, dec)))), texttemplate: "%{text}", textfont: { family: "JetBrains Mono, monospace", size: 11, color: T.text },
+      customdata: R.map((g) => x.map(() => String(g.lab))), hovertemplate: "%{customdata}<br>%{x} : %{text}<extra></extra>", hoverongaps: false,
+    }], L);
+  };
+}
+const exPeriod = (M) => {
+  const span = M.days.length ? (Date.parse(M.days.at(-1)) - Date.parse(M.days[0])) / 864e5 : 0;
+  const dense = denseRange(M.rows, "started_at");
+  const utile = dense ? (Date.parse(dense[1]) - Date.parse(dense[0])) / 864e5 : span;
+  return utile > 75 ? { de: (j) => weekOf(j), nom: "semaine" } : { de: (j) => j, nom: "jour" };
+};
+
+const EX_CHARTS = {
+  sankey(el, M, T) {
+    const cmR = colorMap(M.rg);
+    const nodes = [], colors = [], idx = new Map(), links = new Map();
+    const node = (kind, v, lab, color) => { const k = kind + "|" + v; if (!idx.has(k)) { idx.set(k, nodes.length); nodes.push(lab); colors.push(color); } return idx.get(k); };
+    const link = (a, b, c) => { const k = a + ">" + b; const l = links.get(k) || { a, b, v: 0, c }; l.v++; links.set(k, l); };
+    for (const r of M.rows) {
+      const cr = cmR.color(cmR.fold(r[M.rg]));
+      const b = node("b", r.box_sn, "Boîtier " + (r.box_sn ?? "?"), T.axis);
+      const h = node("h", r.head_uid, r.head_name ?? "Tête ?", T.axis);
+      const p = node("r", r[M.rg], String(r[M.rg] ?? "?"), cr);
+      link(b, h, withAlpha(T.muted, 0.22)); link(h, p, withAlpha(cr, 0.35));
+    }
+    const Ls = [...links.values()];
+    exHeight(el, Math.max(300, Math.min(900, M.groupes.size * 26 + 60)));
+    exPlot(el, [{
+      type: "sankey", arrangement: "snap", valueformat: ",d",
+      node: { label: nodes, color: colors, pad: 10, thickness: 12, line: { width: 0 }, hovertemplate: "%{label}<br>%{value} cycles<extra></extra>" },
+      link: { source: Ls.map((l) => l.a), target: Ls.map((l) => l.b), value: Ls.map((l) => l.v), color: Ls.map((l) => l.c), hovertemplate: "%{source.label} → %{target.label}<br>%{value} cycles<extra></extra>" },
+    }], baseLayout({ margin: { l: 8, r: 8, t: 8, b: 8 } }));
+  },
+  timeline(el, M, T) {
+    const f = EX.axe || M.rg;
+    const lab = (r) => (f === "recette" || f === "programme" ? rcode(r[f]) : f === "essai" ? dtCode(r.essai) ?? "Sans essai" : String(r[f] ?? "—"));
+    const cats = [...new Set(M.rows.map(lab))].sort((a, b) => rcodeNum(a) - rcodeNum(b) || a.localeCompare(b, "fr", { numeric: true }));
+    exHeight(el, Math.max(280, Math.min(900, cats.length * 24 + 90)));
+    const gl = M.n > 1500 ? "scattergl" : "scatter";
+    const ok = M.rows.filter((r) => r.cycle_ok !== "NOK"), nok = M.rows.filter((r) => r.cycle_ok === "NOK");
+    const tr = (rows, o) => ({ type: gl, mode: "markers", x: rows.map((r) => r.started_at), y: rows.map(lab), customdata: rows.map((r) => [r.key, r.source_file, rcode(r[M.rg])]),
+      hovertemplate: "%{customdata[1]}<br>%{x|%d/%m/%Y %H:%M} · %{customdata[2]}<extra>%{y}</extra>", ...o });
+    const traces = [tr(ok, { name: "Conforme", marker: { color: T.series[0], size: 7, opacity: 0.7, line: { color: T.surface, width: 1 } } })];
+    if (nok.length) traces.push(tr(nok, { name: "Anomalie", marker: { symbol: "x-thin", size: 9, color: T.critical, line: { color: T.critical, width: 2 } } }));
+    const L = baseLayout({ hovermode: "closest", margin: { l: 8, r: 12, t: nok.length ? 28 : 8, b: 40 }, showlegend: nok.length > 0 });
+    L.xaxis.type = "date"; const rg = denseRange(M.rows, "started_at"); if (rg) L.xaxis.range = rg;
+    L.yaxis.type = "category"; L.yaxis.categoryorder = "array"; L.yaxis.categoryarray = [...cats].reverse(); L.yaxis.showline = false;
+    exPlot(el, traces, L);
+  },
+  volume(el, M, T) {
+    const P = exPeriod(M);
+    const per = [...new Set(M.rows.filter((r) => r.jour).map((r) => P.de(r.jour)))].sort();
+    const traces = groupBy(M.rows, M.rg).map((g) => {
+      const c = new Map();
+      for (const r of g.rows) if (r.jour) { const k = P.de(r.jour); c.set(k, (c.get(k) || 0) + 1); }
+      const x = per.filter((k) => c.has(k));
+      return { type: "bar", name: g.name, x, y: x.map((k) => c.get(k)), marker: { color: g.color, line: { color: T.surface, width: 1 } },
+        hovertemplate: (P.nom === "semaine" ? "Semaine du " : "") + "%{x|%d/%m/%Y}<br>%{y} cycles<extra>" + esc(rcode(g.name)) + "</extra>" };
+    });
+    const L = baseLayout({ barmode: "stack", hovermode: "closest" });
+    L.legend.traceorder = "normal";
+    L.xaxis.type = "date"; const rg = denseRange(M.rows, "started_at"); if (rg) L.xaxis.range = rg;
+    L.yaxis.title.text = "Cycles par " + P.nom;
+    exPlot(el, traces, L);
+  },
+  heures(el, M, T) {
+    const z = JOURS.map(() => Array(24).fill(0));
+    for (const r of M.rows) { if (!r.jour || !estNum(r.heure)) continue; z[(new Date(r.jour + "T00:00").getDay() + 6) % 7][r.heure]++; }
+    const L = baseLayout({ margin: { l: 8, r: 8, t: 8, b: 40 } });
+    L.yaxis.type = "category"; L.yaxis.autorange = "reversed"; L.yaxis.showline = false; L.xaxis.showline = false;
+    L.xaxis.ticksuffix = " h"; L.xaxis.dtick = 2; L.xaxis.title.text = "Heure de début";
+    exPlot(el, [{ type: "heatmap", x: Array.from({ length: 24 }, (_, h) => h), y: JOURS, z: z.map((row) => row.map((v) => v || null)), colorscale: seqScale(T), xgap: 2, ygap: 2,
+      colorbar: colorbar(T, "Cycles"), hoverongaps: false, hovertemplate: "%{y} · %{x} h<br>%{z} cycle(s)<extra></extra>" }], L);
+  },
+  ecarts(el, M, T) {
+    if (M.gaps.length < 2) return exEmpty(el, "Pas assez de cycles consécutifs sur un même boîtier.");
+    const c = EX_GAP_BINS.map(() => 0);
+    for (const g of M.gaps) c[EX_GAP_BINS.findIndex(([max]) => g < max)]++;
+    const L = baseLayout({ margin: { l: 48, r: 12, t: 8, b: 56 } });
+    L.xaxis.type = "category"; L.yaxis.title.text = "Nombre d'intervalles";
+    exPlot(el, [{ type: "bar", x: EX_GAP_BINS.map((b) => b[1]), y: c, marker: { color: T.series[0] }, hovertemplate: "%{x}<br>%{y} intervalle(s)<extra></extra>" }], L);
+  },
+  plan(el, M, T) {
+    const R = M.rec.filter((g) => g.p && g.steps.some((s) => s.ps));
+    if (!R.length) return exEmpty(el, "Réglages des recettes indisponibles.");
+    const nmax = Math.min(4, Math.max(...R.map((g) => g.steps.length)));
+    const L = baseLayout({ grid: { rows: 1, columns: nmax, pattern: "independent", xgap: 0.08 }, showlegend: false, hovermode: "closest", margin: { l: 52, r: 12, t: 30, b: 44 } });
+    const traces = [], ann = [];
+    // un point par réglage : les recettes qui partagent la vitesse et l'avance d'une étape sont regroupées
+    const facettes = Array.from({ length: nmax }, (_, i) => {
+      const m = new Map();
+      for (const g of R) {
+        const ps = g.steps[i]?.ps;
+        if (!ps || !estNum(ps.rpm) || !estNum(ps.feed_mm_tr)) continue;
+        const k = ps.rpm + "|" + ps.feed_mm_tr, a = m.get(k) || { rpm: ps.rpm, feed: ps.feed_mm_tr, codes: [], n: 0, nok: 0, judged: 0 };
+        a.codes.push(g.code); a.n += g.n; a.nok += g.nok; a.judged += g.judged;
+        m.set(k, a);
+      }
+      return [...m.values()];
+    });
+    const tous = facettes.flat(), maxN = Math.max(...tous.map((a) => a.n));
+    const maxR = Math.max(...tous.map((a) => a.rpm)), maxF = Math.max(...tous.map((a) => a.feed));
+    for (let i = 0; i < nmax; i++) {
+      const sx = i ? String(i + 1) : "", pts = facettes[i];
+      traces.push({
+        type: "scatter", mode: "markers+text", xaxis: "x" + sx, yaxis: "y" + sx,
+        x: pts.map((a) => a.rpm), y: pts.map((a) => a.feed), text: pts.map((a) => a.codes.join(", ")), textposition: "top center",
+        textfont: { size: 10.5, color: T.text2 }, customdata: pts.map((a) => [a.n, a.judged ? nf((100 * a.nok) / a.judged, 1) : "—"]),
+        marker: { size: pts.map((a) => 8 + 18 * Math.sqrt(a.n / maxN)), color: pts.map((a) => (a.judged ? (100 * a.nok) / a.judged : 0)), cmin: 0, cmax: 100, colorscale: seqScale(T, T.critical),
+          showscale: i === nmax - 1, colorbar: colorbar(T, "% anomalies"), line: { color: T.text2, width: 1 } },
+        hovertemplate: "%{text}<br>%{x} tr/min · %{y} mm/tr<br>%{customdata[0]} cycles · %{customdata[1]} % d'anomalies<extra>Étape " + (i + 1) + "</extra>",
+      });
+      L["xaxis" + sx] = Arion.plotly.axis({ title: { text: "Vitesse · tr/min" }, range: [0, maxR * 1.12] });
+      L["yaxis" + sx] = Arion.plotly.axis({ title: { text: i ? "" : "Avance · mm/tr" }, range: [0, maxF * 1.2] });
+      ann.push({ xref: "x" + sx + " domain", yref: "y" + sx + " domain", x: 0, y: 1, xanchor: "left", yanchor: "bottom", showarrow: false, text: "<b>Étape " + (i + 1) + "</b>", font: { size: 12, color: T.text2 } });
+    }
+    L.annotations = ann;
+    exPlot(el, traces, L);
+  },
+  nokRecette: (el, M, T) => exBars(M.rg, "—")(el, M, T),
+  tempsRecette: (el, M, T) => exBoxes((m) => m.rec, "cycle_time_s", "Temps de cycle · s")(el, M, T),
+  durete: exStepHeat((s) => s.durete, "A par mm/tr", 0),
+  epaisseur: exStepHeat((s) => s.ep, "mm", 1),
+  dureeEtape(el, M, T) {
+    if (!M.maxStep) return exEmpty(el, "Aucune étape dans la sélection.");
+    const traces = groupBy(M.rows, M.rg).map((g) => {
+      const x = [], y = [];
+      for (const r of g.rows) for (let n = 1; n <= M.maxStep; n++) { const v = r["e" + n + "_duree_s"]; if (estNum(v)) { x.push("Étape " + n); y.push(v); } }
+      return { type: "box", name: rcode(g.name), x, y, marker: { color: g.color, size: 4 }, line: { color: g.color, width: 1.5 }, fillcolor: "rgba(0,0,0,0)", boxpoints: "outliers",
+        hovertemplate: "%{x} · %{y:.1f} s<extra>" + esc(rcode(g.name)) + "</extra>" };
+    });
+    const L = baseLayout({ boxmode: "group", hovermode: "closest" });
+    L.xaxis.type = "category"; L.yaxis.title.text = "Durée de l'étape · s";
+    exPlot(el, traces, L);
+  },
+  nokTete: (el, M, T) => exBars("head_name", "Tête ?")(el, M, T),
+  nokEssai: (el, M, T) => exBars("essai", "Sans essai")(el, M, T),
+  codes(el, M, T) {
+    const counts = new Map(), codes = new Set();
+    for (const r of M.rows) for (let n = 1; n <= (r.nb_etapes || 0); n++) {
+      const c = r["e" + n + "_stop_code"];
+      if (c == null) continue;
+      codes.add(c); counts.set(n + "|" + c, (counts.get(n + "|" + c) || 0) + 1);
+    }
+    if (!codes.size) return exEmpty(el, "Aucun code d'arrêt dans la sélection.");
+    const cs = [...codes].sort((a, b) => a - b), steps = Array.from({ length: M.maxStep }, (_, i) => i + 1);
+    const z = steps.map((n) => cs.map((c) => counts.get(n + "|" + c) ?? null));
+    exHeight(el, Math.max(220, steps.length * 44 + 90));
+    const L = baseLayout({ margin: { l: 8, r: 8, t: 8, b: 44 } });
+    L.xaxis.type = "category"; L.yaxis.type = "category"; L.yaxis.autorange = "reversed"; L.xaxis.title.text = "Code d'arrêt"; L.xaxis.showline = false; L.yaxis.showline = false;
+    exPlot(el, [{
+      type: "heatmap", x: cs.map(String), y: steps.map((n) => "Étape " + n), z, colorscale: seqScale(T), xgap: 2, ygap: 2, colorbar: colorbar(T, "Étapes"), hoverongaps: false,
+      text: z.map((row) => row.map((v) => (v == null ? "" : nf(v, 0)))), texttemplate: "%{text}", textfont: { family: "JetBrains Mono, monospace", size: 11, color: T.text },
+      customdata: steps.map(() => cs.map(exBitsTxt)), hovertemplate: "%{y} · code %{x}<br>%{customdata}<br>%{z} étape(s)<extra></extra>",
+    }], L);
+  },
+  finRecette(el, M, T) {
+    const R = M.rec, cols = new Map();
+    const z0 = R.map((g) => {
+      const m = new Map();
+      for (const r of g.rows) for (let n = 1; n <= (r.nb_etapes || 0); n++) { const c = r["e" + n + "_stop_code"]; if (c == null) continue; const k = n + "|" + c; m.set(k, (m.get(k) || 0) + 1); cols.set(k, [n, c]); }
+      return m;
+    });
+    if (!cols.size) return exEmpty(el, "Aucun code d'arrêt dans la sélection.");
+    const ks = [...cols.keys()].sort((a, b) => cols.get(a)[0] - cols.get(b)[0] || cols.get(a)[1] - cols.get(b)[1]);
+    const z = R.map((g, i) => ks.map((k) => (z0[i].get(k) ? (100 * z0[i].get(k)) / g.n : null)));
+    exHeight(el, Math.max(240, R.length * 26 + 90));
+    const L = baseLayout({ margin: { l: 8, r: 8, t: 8, b: 56 } });
+    L.xaxis.type = "category"; L.yaxis.type = "category"; L.yaxis.autorange = "reversed"; L.xaxis.showline = false; L.yaxis.showline = false;
+    exPlot(el, [{
+      type: "heatmap", x: ks.map((k) => "É" + cols.get(k)[0] + " · " + cols.get(k)[1]), y: R.map((g) => g.code), z, zmin: 0, zmax: 100, colorscale: seqScale(T), xgap: 2, ygap: 2,
+      colorbar: colorbar(T, "% des cycles"), hoverongaps: false,
+      text: R.map((g, i) => ks.map((k) => (z0[i].get(k) ? String(z0[i].get(k)) : ""))), texttemplate: "%{text}", textfont: { family: "JetBrains Mono, monospace", size: 10.5, color: T.text },
+      customdata: R.map((g) => ks.map(() => String(g.lab))), hovertemplate: "%{customdata}<br>%{x} : %{z:.0f} % (%{text} cycles)<extra></extra>",
+    }], L);
+  },
+  hist(el, M, T, key) {
+    const g = groupBy(M.rows.filter((r) => estNum(r[key])), M.rg);
+    if (!g.length) return exEmpty(el, "Aucune valeur.");
+    const L = baseLayout({ barmode: "overlay", showlegend: false, margin: { l: 40, r: 8, t: 8, b: 40 } });
+    L.xaxis.title.text = label(key); L.yaxis.title.text = "Cycles";
+    exPlot(el, g.map((gr) => ({ type: "histogram", name: rcode(gr.name), x: gr.rows.map((r) => r[key]), nbinsx: 30, opacity: g.length > 1 ? 0.65 : 1,
+      marker: { color: gr.color, line: { color: T.surface, width: 1 } }, hovertemplate: "%{x}<br>%{y} cycle(s)<extra>" + esc(rcode(gr.name)) + "</extra>" })), L);
+  },
+  corr(el, M, T) {
+    const keys = Object.keys(EX_COURT).filter((k) => M.rows.filter((r) => estNum(r[k])).length >= 10);
+    // centrage par recette : on ne garde que ce qui varie à réglage égal
+    const moy = new Map();
+    for (const [g, rows] of groupMap(M.rows, M.rg)) moy.set(g, Object.fromEntries(keys.map((k) => { const v = rows.map((r) => r[k]).filter(estNum); return [k, v.length ? v.reduce((a, b) => a + b, 0) / v.length : null]; })));
+    const ctr = M.rows.map((r) => keys.map((k) => (estNum(r[k]) && moy.get(r[M.rg] ?? "(vide)")[k] != null ? r[k] - moy.get(r[M.rg] ?? "(vide)")[k] : null)));
+    const z = keys.map((_, i) => keys.map((_, j) => {
+      if (i === j) return 1;
+      const xs = [], ys = [];
+      for (const row of ctr) if (row[i] != null && row[j] != null) { xs.push(row[i]); ys.push(row[j]); }
+      return linreg(xs, ys)?.r ?? null;
+    }));
+    const labs = keys.map((k) => EX_COURT[k]);
+    const L = baseLayout({ margin: { l: 8, r: 8, t: 8, b: 8 } });
+    L.xaxis.type = "category"; L.yaxis.type = "category"; L.yaxis.autorange = "reversed"; L.xaxis.side = "top"; L.xaxis.tickangle = -35; L.xaxis.showline = false; L.yaxis.showline = false;
+    exPlot(el, [{
+      type: "heatmap", x: labs, y: labs, z, zmin: -1, zmax: 1, colorscale: divScale(T), xgap: 2, ygap: 2, colorbar: colorbar(T, "Corrélation"), hoverongaps: false,
+      text: z.map((row, i) => row.map((v, j) => (i !== j && v != null && Math.abs(v) >= 0.3 ? nf(v, 2) : ""))), texttemplate: "%{text}", textfont: { family: "JetBrains Mono, monospace", size: 10.5, color: T.text },
+      hovertemplate: "%{y} et %{x}<br>r = %{z:.2f}<extra></extra>",
+    }], L);
+  },
+  dents(el, M, T) {
+    let pts = M.rows.filter((r) => estNum(r.head_local_counter_1));
+    if (!pts.length) return exEmpty(el, "Aucun compteur de trous dans la sélection.");
+    const dense = denseRange(pts, "started_at");
+    if (dense) pts = pts.filter((r) => r.jour >= dense[0] && r.jour <= dense[1]);
+    // une courbe par tête (jamais deux têtes reliées) ; au-delà de six, les autres en gris
+    const cm = colorMap("head_name");
+    let autres = false;
+    const traces = [...groupMap(pts, "head_name")].sort((a, b) => String(a[0]).localeCompare(String(b[0]), "fr", { numeric: true })).map(([h, rows]) => {
+      const rs = [...rows].sort((a, b) => (a.started_at < b.started_at ? -1 : 1));
+      const plie = cm.fold(rows[0].head_name) === "Autres", color = cm.color(cm.fold(rows[0].head_name));
+      const legende = !plie || !autres;
+      if (plie) autres = true;
+      return { type: rs.length > 1500 ? "scattergl" : "scatter", mode: "lines+markers", name: plie ? "Autres têtes" : h, legendgroup: plie ? "autres" : h, showlegend: legende,
+        x: rs.map((r) => r.started_at), y: rs.map((r) => r.head_local_counter_1),
+        customdata: rs.map((r) => [r.key, r.source_file]), line: { color, width: 1.5 }, marker: { color, size: 4 },
+        hovertemplate: "%{customdata[1]}<br>%{x|%d/%m/%Y %H:%M} · compteur %{y}<extra>" + esc(h) + "</extra>" };
+    });
+    const L = baseLayout({ hovermode: "closest" });
+    L.xaxis.type = "date";
+    L.yaxis.title.text = "Compteur local 1 · trous"; L.yaxis.rangemode = "tozero";
+    exPlot(el, traces, L);
+  },
+  usureNuage(el, M, T) {
+    const R = [...M.rec].map((g) => ({ g, pts: g.rows.filter((r) => estNum(r.head_local_counter_1) && estNum(r.couple_max_a)) }))
+      .filter((x) => x.pts.length >= 5).sort((a, b) => b.pts.length - a.pts.length).slice(0, 4);
+    if (!R.length) return exEmpty(el, "Pas assez de cycles avec compteur et couple.");
+    const cols = Math.min(R.length, 2), lignes = Math.ceil(R.length / cols);
+    exHeight(el, 290 * lignes + 40);
+    const L = baseLayout({ grid: { rows: lignes, columns: cols, pattern: "independent", xgap: 0.1, ygap: 0.28 }, showlegend: false, hovermode: "closest", margin: { l: 52, r: 12, t: 30, b: 44 } });
+    const traces = [], ann = [];
+    R.forEach(({ g, pts }, i) => {
+      const sx = i ? String(i + 1) : "", xs = pts.map((r) => r.head_local_counter_1), ys = pts.map((r) => r.couple_max_a);
+      traces.push({ type: pts.length > 1500 ? "scattergl" : "scatter", mode: "markers", xaxis: "x" + sx, yaxis: "y" + sx, x: xs, y: ys,
+        customdata: pts.map((r) => [r.key, r.source_file]), marker: { color: pts.map((r) => (r.cycle_ok === "NOK" ? T.critical : T.series[0])), size: 7, opacity: 0.75, line: { color: T.surface, width: 1 } },
+        hovertemplate: "%{customdata[1]}<br>Compteur %{x} · %{y:.2f} A<extra></extra>" });
+      const ok = pts.filter((r) => r.cycle_ok !== "NOK");
+      const fit = linreg(ok.map((r) => r.head_local_counter_1), ok.map((r) => r.couple_max_a));
+      if (fit) {
+        const x0 = Math.min(...xs), x1 = Math.max(...xs);
+        traces.push({ type: "scatter", mode: "lines", xaxis: "x" + sx, yaxis: "y" + sx, x: [x0, x1], y: [fit.intercept + fit.slope * x0, fit.intercept + fit.slope * x1], line: { color: T.text, width: 2 }, hoverinfo: "skip" });
+      }
+      L["xaxis" + sx] = Arion.plotly.axis({ title: { text: "Compteur local 1 · trous" } });
+      L["yaxis" + sx] = Arion.plotly.axis({ title: { text: "Couple max · A" } });
+      ann.push({ xref: "x" + sx + " domain", yref: "y" + sx + " domain", x: 0, y: 1, xanchor: "left", yanchor: "bottom", showarrow: false, font: { size: 12, color: T.text2 },
+        text: "<b>" + esc(g.code) + "</b>" + (fit ? "   " + signe(fit.slope * 100, 2) + " A / 100 trous · r = " + nf(fit.r, 2) : "") });
+    });
+    L.annotations = ann;
+    exPlot(el, traces, L);
+  },
+  usureCourbe(el, M, T) {
+    const pts = [];
+    for (const g of M.rec) {
+      const ok = g.rows.filter((r) => r.cycle_ok !== "NOK" && estNum(r.head_local_counter_1) && estNum(r.couple_max_a));
+      const ref = medianOf(ok.filter((r) => r.head_local_counter_1 < 20).map((r) => r.couple_max_a));
+      if (!ref || ok.filter((r) => r.head_local_counter_1 < 20).length < 5) continue;
+      for (const r of ok) pts.push([r.head_local_counter_1, (100 * r.couple_max_a) / ref]);
+    }
+    if (pts.length < 20) return exEmpty(el, "Pas assez de cycles sur foret neuf (moins de 20 trous) pour servir de référence.");
+    const xmax = quantile(pts.map((p) => p[0]).sort((a, b) => a - b), 0.98);
+    const pas = [5, 10, 20, 25, 50, 100, 200, 250, 500, 1000].find((v) => v >= xmax / 15) || 1000;
+    const bins = new Map();
+    for (const [x, y] of pts) { if (x > xmax) continue; const b = Math.floor(x / pas); if (!bins.has(b)) bins.set(b, []); bins.get(b).push(y); }
+    const B = [...bins.entries()].filter(([, v]) => v.length >= 3).sort((a, b) => a[0] - b[0]).map(([b, v]) => {
+      const s = v.sort((a, c) => a - c);
+      return { x: b * pas + pas / 2, med: quantile(s, 0.5), lo: quantile(s, 0.25), hi: quantile(s, 0.75), n: s.length };
+    });
+    const L = baseLayout({ showlegend: false, hovermode: "x unified" });
+    L.xaxis.title.text = "Compteur local 1 · trous"; L.yaxis.title.text = "Couple max · % du foret neuf"; L.yaxis.ticksuffix = " %";
+    L.shapes = [{ type: "line", xref: "paper", x0: 0, x1: 1, y0: 100, y1: 100, line: { color: T.axis, width: 1 } }];
+    exPlot(el, [
+      { type: "scatter", mode: "lines", x: B.map((b) => b.x), y: B.map((b) => b.lo), line: { width: 0 }, hoverinfo: "skip" },
+      { type: "scatter", mode: "lines", x: B.map((b) => b.x), y: B.map((b) => b.hi), line: { width: 0 }, fill: "tonexty", fillcolor: withAlpha(T.series[0], 0.18), hoverinfo: "skip" },
+      { type: "scatter", mode: "lines+markers", x: B.map((b) => b.x), y: B.map((b) => b.med), customdata: B.map((b) => b.n), line: { color: T.series[0], width: 2 }, marker: { color: T.series[0], size: 6 },
+        hovertemplate: "%{y:.1f} % (médiane de %{customdata} cycles)<extra></extra>" },
+    ], L);
+  },
+  vieForet(el, M, T) {
+    const lives = M.tools.filter((t) => t.changed).map((t) => t.life);
+    if (!lives.length) return exEmpty(el, "Aucun changement de foret dans la sélection : le compteur local 1 n'est jamais remis à zéro.");
+    const L = baseLayout({ showlegend: false });
+    L.xaxis.title.text = "Trous percés avant changement"; L.yaxis.title.text = "Forets";
+    exPlot(el, [{ type: "histogram", x: lives, nbinsx: Math.min(20, Math.max(5, lives.length)), marker: { color: T.series[0], line: { color: T.surface, width: 1 } }, hovertemplate: "%{x} trous<br>%{y} foret(s)<extra></extra>" }], L);
+  },
+  deriveLigne(el, M, T) {
+    const key = EX.mesure, nom = EX_MESURES.find((m) => m.key === key)?.nom || key;
+    const dense = denseRange(M.rows, "started_at");
+    const pts = M.rows.filter((r) => !dense || (r.jour >= dense[0] && r.jour <= dense[1])).map((r) => ({ r, v: exIndex(M, r, key) })).filter((p) => p.v != null);
+    if (pts.length < 5) return exEmpty(el, "Pas assez de cycles avec cette mesure.");
+    const sorted = pts.map((p) => p.v).sort((a, b) => a - b);
+    const traces = [], vOf = new Map(pts.map((p) => [p.r, p.v]));
+    for (const g of groupBy(pts.map((p) => p.r), "box_sn")) {
+      const ps = g.rows.map((r) => ({ r, v: vOf.get(r) })).sort((a, b) => (a.r.started_at < b.r.started_at ? -1 : 1));
+      const w = Math.max(5, Math.min(31, Math.round(ps.length / 25))) | 1, h = w >> 1;
+      const roll = ps.map((_, i) => medianOf(ps.slice(Math.max(0, i - h), i + h + 1).map((p) => p.v)));
+      traces.push({ type: ps.length > 1500 ? "scattergl" : "scatter", mode: "markers", name: "Boîtier " + g.name, showlegend: false, x: ps.map((p) => p.r.started_at), y: ps.map((p) => p.v),
+        customdata: ps.map((p) => [p.r.key, p.r.source_file, rcode(p.r[M.rg])]), marker: { color: g.color, size: 5, opacity: 0.3 },
+        hovertemplate: "%{customdata[1]}<br>%{customdata[2]} · indice %{y:.0f}<extra></extra>" });
+      traces.push({ type: "scatter", mode: "lines", name: "Boîtier " + g.name + " · médiane glissante", x: ps.map((p) => p.r.started_at), y: roll, line: { color: g.color, width: 2 }, hovertemplate: "Médiane glissante : %{y:.0f}<extra></extra>" });
+    }
+    const L = baseLayout({ hovermode: "closest" });
+    L.xaxis.type = "date";
+    L.yaxis.title.text = nom + " · indice (100 = recette)";
+    L.shapes = [
+      { type: "rect", xref: "paper", x0: 0, x1: 1, y0: quantile(sorted, 0.1), y1: quantile(sorted, 0.9), fillcolor: T.band, line: { width: 0 }, layer: "below" },
+      { type: "line", xref: "paper", x0: 0, x1: 1, y0: 100, y1: 100, line: { color: T.axis, width: 1 } },
+    ];
+    exPlot(el, traces, L);
+  },
+  deriveCarte(el, M, T) {
+    const key = EX.mesure, P = exPeriod(M), cells = new Map(), pers = new Set();
+    const dense = denseRange(M.rows, "started_at");
+    for (const r of M.rows) {
+      const v = exIndex(M, r, key);
+      if (v == null || !r.jour || (dense && (r.jour < dense[0] || r.jour > dense[1]))) continue;
+      const p = P.de(r.jour), k = rcode(r[M.rg]) + "|" + p;
+      pers.add(p); if (!cells.has(k)) cells.set(k, []); cells.get(k).push(v);
+    }
+    if (!cells.size) return exEmpty(el, "Pas assez de cycles avec cette mesure.");
+    const xs = [...pers].sort(), ys = M.rec.map((g) => g.code).filter((c) => xs.some((p) => cells.has(c + "|" + p)));
+    const z = ys.map((c) => xs.map((p) => (cells.has(c + "|" + p) ? medianOf(cells.get(c + "|" + p)) : null)));
+    const n = ys.map((c) => xs.map((p) => cells.get(c + "|" + p)?.length ?? 0));
+    const ecart = Math.max(5, quantile(z.flat().filter((v) => v != null).map((v) => Math.abs(v - 100)).sort((a, b) => a - b), 0.95));
+    exHeight(el, Math.max(240, ys.length * 26 + 100));
+    const L = baseLayout({ margin: { l: 8, r: 8, t: 8, b: 56 } });
+    L.xaxis.type = "category"; L.yaxis.type = "category"; L.yaxis.autorange = "reversed"; L.xaxis.showline = false; L.yaxis.showline = false;
+    exPlot(el, [{
+      type: "heatmap", x: xs.map((p) => new Date(p + "T00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })), y: ys, z, zmin: 100 - ecart, zmax: 100 + ecart,
+      colorscale: divScale(T), xgap: 2, ygap: 2, colorbar: colorbar(T, "Indice"), hoverongaps: false, customdata: n,
+      hovertemplate: "%{y} · " + (P.nom === "semaine" ? "semaine du " : "") + "%{x}<br>indice %{z:.0f} (%{customdata} cycles)<extra></extra>",
+    }], L);
+  },
+  essaiRecette(el, M, T) {
+    const E = exEssais(M);
+    if (!E.length) return exEmpty(el, "Aucun essai dans la sélection.");
+    const recs = M.rec.map((g) => g.code).filter((c) => E.some((e) => e.recettes.includes(c)));
+    const z = E.map((e) => recs.map((c) => e.rows.filter((r) => rcode(r[M.rg]) === c).length || null));
+    exHeight(el, Math.max(240, E.length * 28 + 90));
+    const L = baseLayout({ margin: { l: 8, r: 8, t: 8, b: 44 } });
+    L.xaxis.type = "category"; L.yaxis.type = "category"; L.yaxis.autorange = "reversed"; L.xaxis.showline = false; L.yaxis.showline = false;
+    exPlot(el, [{
+      type: "heatmap", x: recs, y: E.map((e) => e.code), z, colorscale: seqScale(T), xgap: 2, ygap: 2, colorbar: colorbar(T, "Cycles"), hoverongaps: false,
+      text: z.map((row) => row.map((v) => (v ? String(v) : ""))), texttemplate: "%{text}", textfont: { family: "JetBrains Mono, monospace", size: 10.5, color: T.text },
+      hovertemplate: "%{y} · %{x}<br>%{z} cycles<extra></extra>",
+    }], L);
+  },
+  essaiBulle(el, M, T) {
+    const E = exEssais(M).filter((e) => e.medT != null && e.medC != null);
+    if (!E.length) return exEmpty(el, "Aucun essai dans la sélection.");
+    const cm = colorMap("fournisseur"), maxN = Math.max(...E.map((e) => e.n));
+    const traces = cm.order.map((f) => {
+      const es = E.filter((e) => cm.fold(e.fournisseur) === f);
+      if (!es.length) return null;
+      return { type: "scatter", mode: "markers+text", name: String(f), x: es.map((e) => e.medT), y: es.map((e) => e.medC), text: es.map((e) => e.code), textposition: "top center",
+        textfont: { size: 10.5, color: T.text2 }, customdata: es.map((e) => [e.n, e.pctOk == null ? "—" : nf(e.pctOk, 0)]),
+        marker: { color: cm.color(f), size: es.map((e) => 10 + 22 * Math.sqrt(e.n / maxN)), opacity: 0.85, line: { color: T.surface, width: 2 } },
+        hovertemplate: "%{text} · %{x:.1f} s · %{y:.2f} A<br>%{customdata[0]} cycles · %{customdata[1]} % conformes<extra>" + esc(String(f)) + "</extra>" };
+    }).filter(Boolean);
+    const L = baseLayout({ hovermode: "closest" });
+    L.xaxis.title.text = "Temps de cycle médian · s"; L.yaxis.title.text = "Couple max médian · A";
+    exPlot(el, traces, L);
+  },
+  essaiBox: (el, M, T) => exBoxes((m) => exEssais(m), "couple_max_a", "Couple max · A")(el, M, T),
+  signature(el, M, T) {
+    if (!EX.sig) return exEmpty(el, "Choisissez une recette puis « Tracer la signature ».");
+    exDrawSignature(el, T);
+  },
+};
+const exBitsTxt = (c) => {
+  const bits = [];
+  for (let b = 0; b <= 30; b++) if (c & (1 << b)) bits.push((EX.bits || []).find((x) => x.bit === b)?.label || "bit " + b);
+  return bits.length ? bits.join(" + ") : "aucun bit";
+};
+
+// ------------------------------------------------ signature (mesures lues à la demande)
+async function exSignature() {
+  const lab = $("#ex-sig-rec").value, n = Number($("#ex-sig-n").value), st = $("#ex-sig-status"), btn = $("#ex-sig-go");
+  const cand = EX.M.rows.filter((r) => String(r[EX.M.rg]) === lab && r.cycle_ok !== "NOK" && S.db.has(r.key))
+    .sort((a, b) => (a.head_local_counter_1 ?? 1e9) - (b.head_local_counter_1 ?? 1e9));
+  if (!cand.length) { st.textContent = "Aucun cycle conforme de cette recette dans la sélection."; return; }
+  const pick = cand.length <= n ? cand : Array.from({ length: n }, (_, i) => cand[Math.round((i * (cand.length - 1)) / (n - 1))]);
+  btn.disabled = true;
+  const curves = [];
+  try {
+    for (let i = 0; i < pick.length; i++) {
+      st.textContent = "Lecture des mesures : cycle " + (i + 1) + " sur " + pick.length + "…";
+      curves.push({ r: pick[i], c: await exCurve(pick[i]) });
+    }
+  } catch (err) {
+    st.textContent = "Lecture impossible : " + err.message;
+    return;
+  } finally { btn.disabled = false; }
+  const lc = curves.map((x) => x.r.head_local_counter_1).filter(estNum);
+  st.textContent = plural(curves.length, "cycle") + " conformes de " + rcode(lab) + (lc.length ? " · compteur local 1 de " + nf(Math.min(...lc), 0) + " à " + nf(Math.max(...lc), 0) : "");
+  EX.sig = { lab, curves };
+  exRedraw("signature");
+}
+// Mesures d'un cycle ramenées à la profondeur (pas de 0,1 mm), jusqu'au fond du trou :
+// le retrait n'appartient pas à la signature.
+async function exCurve(r) {
+  if (EX.sigCache.has(r.key)) return EX.sigCache.get(r.key);
+  const { id } = S.db.get(r.key);
+  const pages = Math.max(1, Math.ceil((r.nb_mesures || base.PAGE) / base.PAGE));
+  const rows = await base.pages(pages, (i) => base.check(sb.from("cycle_sample").select("position_mm,i_torque_a,i_thrust_a").eq("cycle_id", id).order("sample_idx").range(i * base.PAGE, (i + 1) * base.PAGE - 1)));
+  const p0 = rows.find((x) => x.position_mm != null)?.position_mm ?? 0;
+  let fond = 0, iFond = 0;
+  const d = rows.map((x, i) => { const v = x.position_mm == null ? NaN : Math.abs(x.position_mm - p0); if (v > fond) { fond = v; iFond = i; } return v; });
+  const PAS = 0.1, nb = Math.floor(fond / PAS) + 1;
+  const tq = new Float64Array(nb), th = new Float64Array(nb), cnt = new Uint32Array(nb);
+  for (let i = 0; i <= iFond; i++) {
+    if (!Number.isFinite(d[i])) continue;
+    const b = Math.floor(d[i] / PAS);
+    tq[b] += rows[i].i_torque_a ?? 0; th[b] += rows[i].i_thrust_a ?? 0; cnt[b]++;
+  }
+  const c = { x: [], tq: [], th: [] };
+  for (let b = 0; b < nb; b++) if (cnt[b]) { c.x.push(Math.round((b * PAS + PAS / 2) * 100) / 100); c.tq.push(tq[b] / cnt[b]); c.th.push(th[b] / cnt[b]); }
+  EX.sigCache.set(r.key, c);
+  if (EX.sigCache.size > 60) EX.sigCache.delete(EX.sigCache.keys().next().value);
+  return c;
+}
+function exDrawSignature(el, T) {
+  const { curves } = EX.sig;
+  const lc = curves.map((x) => x.r.head_local_counter_1).filter(estNum), lo = Math.min(...lc), hi = Math.max(...lc);
+  const traces = [];
+  curves.forEach(({ r, c }, i) => {
+    const t = hi > lo && estNum(r.head_local_counter_1) ? (r.head_local_counter_1 - lo) / (hi - lo) : 0.5;
+    const color = mix(T.surface, T.series[0], 0.3 + 0.7 * t);
+    const bout = i === 0 ? " · le plus neuf" : i === curves.length - 1 ? " · le plus usé" : "";
+    const nom = "Compteur " + nf(r.head_local_counter_1, 0) + bout;
+    for (const [k, ax] of [["tq", "y"], ["th", "y2"]]) {
+      traces.push({ type: "scatter", mode: "lines", x: c.x, y: c[k], yaxis: ax, name: nom, legendgroup: r.key, showlegend: ax === "y" && !!bout,
+        customdata: c.x.map(() => [r.key]), line: { color, width: 1.25 }, hovertemplate: "%{y:.2f} A<extra>" + esc(nom) + "</extra>" });
+    }
+  });
+  // signature médiane : par pas de profondeur présent dans au moins la moitié des cycles
+  const parX = new Map();
+  for (const { c } of curves) c.x.forEach((x, j) => { if (!parX.has(x)) parX.set(x, { tq: [], th: [] }); parX.get(x).tq.push(c.tq[j]); parX.get(x).th.push(c.th[j]); });
+  const xs = [...parX.keys()].filter((x) => parX.get(x).tq.length >= curves.length / 2).sort((a, b) => a - b);
+  for (const [k, ax] of [["tq", "y"], ["th", "y2"]]) {
+    traces.push({ type: "scatter", mode: "lines", x: xs, y: xs.map((x) => medianOf(parX.get(x)[k])), yaxis: ax, name: "Signature médiane", legendgroup: "med", showlegend: ax === "y",
+      line: { color: T.text, width: 2.5 }, hovertemplate: "%{y:.2f} A<extra>médiane</extra>" });
+  }
+  const L = baseLayout({ hovermode: "x unified", margin: { l: 56, r: 12, t: 34, b: 44 } });
+  L.yaxis = { ...L.yaxis, domain: [0.54, 1], title: { ...L.yaxis.title, text: "Couple · A" } };
+  L.yaxis2 = Arion.plotly.axis({ domain: [0, 0.46], title: { text: "Poussée · A" } });
+  L.xaxis = { ...L.xaxis, anchor: "y2", title: { ...L.xaxis.title, text: "Profondeur · mm" } };
+  exPlot(el, traces, L);
+}
+
 // ---------------------------------------------------------------- navigation et rendu
 function setTab(tab) {
   if (tab === "depot" && !DEPOT_OUVERT) tab = "dash";
@@ -1744,6 +2993,7 @@ document.querySelectorAll("[data-goto]").forEach((b) => (b.onclick = () => setTa
 function renderCurrent() {
   if (S.tab === "depot") { depot.render(); if (!depot.journalLoaded) depot.loadJournal(); return; }
   if (!S.rows.length) return;
+  if (S.tab === "explo") renderExplo();
   if (S.tab === "dash") { renderKpis(); renderDash(); }
   if (S.tab === "cycle") renderDetail();
   if (S.tab === "data") renderTable();
@@ -1770,6 +3020,7 @@ function setTabVisibility() {
   $("#filters").hidden = !has || depotTab;
   $("#empty").hidden = has || depotTab;
   $("#tab-depot").hidden = !depotTab;
+  $("#tab-explo").hidden = !has || S.tab !== "explo";
   $("#tab-dash").hidden = !has || S.tab !== "dash";
   $("#tab-cycle").hidden = !has || S.tab !== "cycle";
   $("#tab-data").hidden = !has || S.tab !== "data";
@@ -1940,8 +3191,13 @@ const base = {
           }
         }
       }
+      // recettes : facultatives, les cycles restent lisibles sans elles
+      let recettes = new Map();
+      try { recettes = await this.loadRecettes(all); }
+      catch (err) { console.warn("Recettes illisibles :", err); }
       for (const v of all) {
         const r = this.summary(v);
+        r.recette = recettes.get(v.db_id) ?? null;
         S.cycles.set(r.key, r);
         S.db.set(r.key, { id: v.db_id, rate: v.sample_rate_hz });
       }
@@ -1952,6 +3208,36 @@ const base = {
       bar.hidden = true;
       refresh();
     }
+  },
+  // Recette d'un cycle : contenu exact de son programme (vitesse, avance… de chaque étape).
+  // Plusieurs recettes peuvent porter le même Pset et la même version : c'est le cas d'une
+  // campagne d'essais où les réglages changent sans que la version change. Codes R1, R2…
+  // dans l'ordre de première utilisation ; S.recettes garde le programme de chaque libellé.
+  async loadRecettes(all) {
+    const n = Math.ceil(all.length / this.PAGE);
+    const [liens, programmes, etapes] = await Promise.all([
+      this.pages(n, (i) => this.check(sb.from("cycle").select("id,program_id").order("id").range(i * this.PAGE, (i + 1) * this.PAGE - 1))),
+      this.check(sb.from("program").select("id,pset_nb,pset_version")),
+      this.check(sb.from("program_step").select("*").gt("step_nb", 0).order("step_nb")),
+    ]);
+    const progDe = new Map(liens.map((l) => [l.id, l.program_id]));
+    const prog = new Map(programmes.map((p) => [p.id, { ...p, steps: [] }]));
+    for (const e of etapes) if (e.step_on !== false) prog.get(e.program_id)?.steps.push(e);
+    const debut = new Map();
+    for (const v of all) {
+      const pid = progDe.get(v.db_id);
+      if (pid != null && (!debut.has(pid) || v.started_at < debut.get(pid))) debut.set(pid, v.started_at);
+    }
+    const f = (x, d) => (x == null ? "—" : nf(x, d));
+    S.recettes = new Map();
+    [...debut.keys()].sort((a, b) => (debut.get(a) < debut.get(b) ? -1 : debut.get(a) > debut.get(b) ? 1 : a - b)).forEach((pid, i) => {
+      const p = prog.get(pid);
+      if (!p) return;
+      p.code = "R" + (i + 1);
+      p.label = p.code + " · " + (p.steps.length ? p.steps.map((s) => f(s.rpm, 0) + "/" + f(s.feed_mm_tr, 3)).join(" → ") : "sans étape");
+      S.recettes.set(p.label, p);
+    });
+    return new Map(all.map((v) => [v.db_id, prog.get(progDe.get(v.db_id))?.label]).filter(([, l]) => l));
   },
   // Mesures, étapes et programme d'un cycle, au format rendu par le worker.
   async samples({ id, rate }, row) {

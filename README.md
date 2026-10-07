@@ -64,6 +64,14 @@ Retirer quelqu'un : `delete from public.utilisateur_autorise where email = '…'
   à son essai sans être réimporté. Une valeur mal lue se corrige dans la table `essai`.
   Un `.csv` avec une colonne `source_file` (ex. `verite_terrain.csv`) est joint aux cycles
   des tableaux de bord, sur le poste seulement.
+- **Exploration** (onglet d'ouverture) : comprendre les données avant de les analyser.
+  Chiffres clés, constats calculés automatiquement (« À retenir »), organisation de la base
+  et des fichiers, activité dans le temps, recettes testées, matière traversée, résultats et
+  codes d'arrêt, mesures et corrélations, usure du foret, dérives, essais, signature de
+  perçage (mesures lues à la demande) et questions à poser à Desoutter. Tout suit les filtres.
+  Une **recette** est le contenu exact du programme (vitesse et avance de chaque étape) :
+  plusieurs recettes peuvent porter le même Pset et la même version. Codes R1, R2… dans
+  l'ordre de première utilisation ; le champ « Recette » sert aussi de filtre partout.
 - **Tableau de bord / Cycle / Données** : lus en base (`v_cycle_resume`, mesures à la
   demande), filtres, graphiques configurables, export CSV.
 

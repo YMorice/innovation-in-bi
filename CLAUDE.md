@@ -25,7 +25,12 @@ Mode d'emploi pour Yann : `README.md`.
   `utilisateur_autorise` ; liens d'invitation/réinitialisation → écran « Choisissez votre mot
   de passe »), onglet Dépôt (découpage dans le worker `IMPORT`, copie gzip dans le bucket
   `exports`, RPC `deposer_cycle`) et tableaux de bord lus en base (`v_cycle_resume`, mesures à
-  la demande ; `base.summary()` produit les mêmes champs que `parse()` du worker). Projet
+  la demande ; `base.summary()` produit les mêmes champs que `parse()` du worker). Onglet
+  d'ouverture **Exploration** (`renderExplo`, objet `EX`) : tout calculé dans le navigateur sur
+  la sélection, graphiques tracés à l'arrivée à l'écran. Regroupement central : la **recette**
+  (`base.loadRecettes` : `cycle.program_id` + `program_step`, codes R1… par première
+  utilisation, champ `recette` des cycles), car les vraies données ont une douzaine de
+  réglages sous le même « Pset 0 v9 ». Aucune migration requise. Projet
   visé : `config.js`, généré au build Netlify (`site/netlify.toml` → `build-config.js`) depuis
   les variables `SUPABASE_URL` / `SUPABASE_KEY` du site ; le build refuse une clé secrète.
   Apparence : design system **Arion** (artifact « Design System »,
