@@ -1,0 +1,33 @@
+# Liste blanche : à la racine, seul ce qui est nommé ici entre dans le dépôt.
+# Tout le reste est ignoré, dont le dossier confidentiel (voir CLAUDE.md) :
+# git ne le parcourt jamais. Ajouter une ligne `!/…` pour un nouveau dossier.
+/*
+!/.gitignore
+!/README.md
+!/CLAUDE.md
+!/netlify.toml
+!/.claude/
+!/app/
+!/supabase/
+!/scripts/
+!/donnees/
+!/archives/
+
+# Secrets et réglages personnels
+.env
+.env.*
+!.env.example
+/.claude/settings.local.json
+
+# Généré au build Netlify (build-config.js)
+/app/config.js
+
+# Données : l'export réel reste en local ; les synthétiques se régénèrent
+# avec scripts/generer_synthetiques.py (≈ 190 Mo).
+/donnees/fichier_ano.xls
+/donnees/synthetiques/
+
+# Système et Python
+.DS_Store
+__pycache__/
+*.pyc

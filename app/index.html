@@ -1,0 +1,1958 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cycles de perçage</title>
+<meta name="description" content="Dépôt d'exports de cycles de perçage et tableaux de bord interactifs, traités entièrement dans le navigateur.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%232a78d6'/%3E%3Cpath d='M6 17V11M10 17V7M14 17v-4M18 17V9' stroke='white' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script><!-- généré au build Netlify (build-config.js) -->
+
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f3f2ee;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --accent: #2a78d6;
+  --accent-ink: #ffffff;
+  --band: rgba(11,11,11,0.035);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --s5: #e87ba4; --s6: #008300; --s7: #4a3aa7; --s8: #e34948;
+  --good: #0ca30c; --critical: #d03b3b; --good-ink: #006300;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --surface-2: #232321;
+    --text: #ffffff; --text-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --accent: #3987e5; --band: rgba(255,255,255,0.04);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    --good-ink: #0ca30c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --surface-2: #232321;
+  --text: #ffffff; --text-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --accent: #3987e5; --band: rgba(255,255,255,0.04);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  --good-ink: #0ca30c;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--page); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; color: inherit; }
+button {
+  border: 1px solid var(--border); background: var(--surface); border-radius: 8px;
+  padding: 6px 12px; cursor: pointer;
+}
+button:hover { background: var(--surface-2); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+button.primary:hover { filter: brightness(1.08); }
+button.ghost { border-color: transparent; background: transparent; padding: 4px 8px; color: var(--text-2); }
+button.ghost:hover { background: var(--surface-2); color: var(--text); }
+button:disabled { opacity: .45; cursor: default; }
+select, input[type=date], input[type=text], input[type=search] {
+  border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 5px 8px;
+  max-width: 100%;
+}
+label.field { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--text-2); }
+
+header.top {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--surface);
+  position: sticky; top: 0; z-index: 5;
+}
+header.top h1 { font-size: 16px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+header.top .spacer { flex: 1; }
+.status { font-size: 12px; color: var(--text-2); }
+.progress { width: 140px; height: 4px; background: var(--grid); border-radius: 2px; overflow: hidden; }
+.progress > div { height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+
+nav.tabs { display: flex; gap: 4px; padding: 10px 20px 0; }
+nav.tabs button { border: none; background: none; border-radius: 8px 8px 0 0; padding: 8px 14px; color: var(--text-2); border-bottom: 2px solid transparent; }
+nav.tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+
+.filters {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+}
+.filters label.field select { min-width: 110px; }
+.filters .active select { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+main { padding: 16px 20px 60px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.kpi .lbl { font-size: 12px; color: var(--text-2); }
+.kpi .val { font-size: 24px; font-weight: 650; letter-spacing: -.02em; margin-top: 2px; }
+.kpi .sub { font-size: 12px; color: var(--muted); }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 6px; min-width: 0; }
+.tile.full { grid-column: 1 / -1; }
+.tile .head { display: flex; align-items: center; gap: 6px; }
+.tile .head h3 { font-size: 14px; font-weight: 600; margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile .head .tools { display: flex; gap: 0; opacity: .55; }
+.tile:hover .head .tools, .tile:focus-within .head .tools { opacity: 1; }
+.tile .desc { font-size: 12px; color: var(--muted); margin: 1px 0 2px; }
+.tile .plot { height: 320px; }
+.tile .empty { height: 320px; display: grid; place-items: center; color: var(--muted); font-size: 13px; text-align: center; padding: 20px; }
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.toolbar .spacer { flex: 1; }
+
+.drop {
+  border: 2px dashed var(--axis); border-radius: 16px; padding: 48px 24px; text-align: center;
+  background: var(--surface); max-width: 720px; margin: 40px auto;
+}
+.drop h2 { margin: 0 0 6px; font-size: 20px; }
+.drop p { color: var(--text-2); margin: 6px 0; }
+.drop .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+.drop small { display: block; margin-top: 16px; color: var(--muted); }
+body.dragging::after {
+  content: "Déposez vos exports ici"; position: fixed; inset: 12px; border: 3px dashed var(--accent);
+  border-radius: 18px; background: color-mix(in srgb, var(--page) 85%, transparent);
+  display: grid; place-items: center; font-size: 22px; font-weight: 600; z-index: 50; pointer-events: none;
+}
+
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+table.data th, table.data td { padding: 6px 8px; border-bottom: 1px solid var(--grid); text-align: left; white-space: nowrap; }
+table.data th { font-weight: 600; color: var(--text-2); cursor: pointer; position: sticky; top: 0; background: var(--surface); user-select: none; }
+table.data td.num, table.data th.num { text-align: right; }
+table.data tbody tr { cursor: pointer; }
+table.data tbody tr:hover { background: var(--surface-2); }
+.tablewrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: auto; max-height: 70vh; }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+.badge.ok { color: var(--good-ink); }
+.badge.nok { color: var(--critical); }
+.badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+.detail-top { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
+.detail-top input[type=search] { min-width: 320px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+.facts > div > span { display: block; font-size: 12px; color: var(--text-2); }
+.facts div b { font-weight: 600; overflow-wrap: anywhere; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 2px 4px 2px 10px; background: var(--surface); font-size: 12px; }
+.chip .sw { width: 10px; height: 3px; border-radius: 2px; }
+.chip button { border: none; padding: 0 6px; background: none; }
+.notice { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 10px 12px; color: var(--text-2); margin-bottom: 12px; }
+details.errors { margin-top: 12px; font-size: 12px; color: var(--text-2); }
+details.errors li { overflow-wrap: anywhere; }
+
+dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--text); padding: 0; width: min(520px, calc(100vw - 32px)); }
+dialog::backdrop { background: rgba(0,0,0,.35); }
+dialog form { padding: 18px; display: grid; gap: 12px; }
+dialog h2 { margin: 0; font-size: 16px; }
+dialog .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+dialog .hint { font-size: 12px; color: var(--muted); margin: -4px 0 0; }
+dialog menu { display: flex; justify-content: flex-end; gap: 8px; margin: 4px 0 0; padding: 0; }
+
+.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--page); padding: 8px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
+.toast.show { opacity: 1; }
+[hidden] { display: none !important; }
+
+/* connexion : tant que la session n'est pas validée, seul l'écran de connexion est visible */
+body.locked > :not(#auth):not(.toast) { display: none !important; }
+body:not(.locked) #auth { display: none; }
+#auth { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+.auth-card {
+  width: min(380px, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 24px; display: grid; gap: 14px;
+}
+.auth-card h1 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
+.auth-card p { margin: 0; color: var(--text-2); }
+.auth-card label.field { font-size: 13px; }
+.auth-card input { border: 1px solid var(--border); background: var(--page); border-radius: 8px; padding: 8px 10px; }
+.auth-card button.primary { padding: 9px 12px; }
+.auth-card .err { color: var(--critical); font-size: 13px; }
+.auth-card small { color: var(--muted); font-size: 12px; }
+.progress.wide { width: 100%; margin: 0 0 12px; }
+.section-title { font-size: 14px; margin: 20px 0 8px; }
+#tab-depot .drop { margin: 8px auto 20px; }
+table.data.depot tbody tr, #journal tbody tr { cursor: default; }
+table.data.depot td.msg, #journal td.msg { white-space: normal; color: var(--text-2); min-width: 240px; }
+.etat { font-weight: 600; }
+.etat.importé { color: var(--good-ink); }
+.etat.erreur { color: var(--critical); }
+.etat.doublon, .etat.attente { color: var(--muted); }
+.etat.envoi { color: var(--accent); }
+header.top .who { font-size: 12px; color: var(--text-2); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 760px) {
+  header.top, .filters, main, nav.tabs { padding-left: 16px; padding-right: 16px; }
+  .grid { grid-template-columns: 1fr; }
+  .tile .plot, .tile .empty { height: 280px; }
+  .detail-top input[type=search] { min-width: 0; width: 100%; }
+  dialog .row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body class="locked">
+<section id="auth">
+  <form class="auth-card" id="auth-form">
+    <h1>Cycles de perçage</h1>
+    <p id="auth-intro">Connectez-vous pour accéder aux données.</p>
+    <label class="field">E-mail <input type="email" name="email" autocomplete="email" required></label>
+    <label class="field">Mot de passe <input type="password" name="password" autocomplete="current-password" required></label>
+    <p class="err" id="auth-err" role="alert" hidden></p>
+    <button class="primary" type="submit" id="auth-submit">Se connecter</button>
+    <button type="button" id="auth-out" hidden>Se déconnecter</button>
+    <small>Pas de compte ? Demandez à l'administrateur du projet de vous en créer un.</small>
+  </form>
+  <!-- Arrivée par le lien d'un e-mail d'invitation ou de réinitialisation -->
+  <form class="auth-card" id="pwd-form" hidden>
+    <h1>Choisissez votre mot de passe</h1>
+    <p id="pwd-intro"></p>
+    <label class="field">Nouveau mot de passe <input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+    <label class="field">Confirmation <input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label>
+    <p class="err" id="pwd-err" role="alert" hidden></p>
+    <button class="primary" type="submit" id="pwd-submit">Enregistrer et continuer</button>
+  </form>
+</section>
+
+<header class="top">
+  <h1>Cycles de perçage</h1>
+  <span class="status" id="status"></span>
+  <div class="progress" id="progress" hidden><div></div></div>
+  <span class="spacer"></span>
+  <button id="btn-add-files" class="primary">Déposer des fichiers</button>
+  <button id="btn-add-folder">Un dossier</button>
+  <button id="btn-export" title="Exporter les cycles filtrés (CSV, format Excel français)">Exporter CSV</button>
+  <button id="btn-clear" class="ghost" title="Oublier toutes les données chargées">Vider</button>
+  <button id="btn-reload-db" class="ghost" title="Relire les cycles enregistrés en base">Recharger la base</button>
+  <button id="btn-theme" class="ghost" title="Thème">◐</button>
+  <span class="who" id="who"></span>
+  <button id="btn-logout" class="ghost">Se déconnecter</button>
+  <input type="file" id="in-files" multiple accept=".xls,.txt,.tsv,.csv" hidden>
+  <input type="file" id="in-folder" webkitdirectory multiple hidden>
+</header>
+
+<nav class="tabs" id="tabs" hidden>
+  <button data-tab="dash" aria-selected="true">Tableau de bord</button>
+  <button data-tab="cycle">Cycle</button>
+  <button data-tab="data">Données</button>
+  <button data-tab="depot">Dépôt</button>
+</nav>
+<div class="filters" id="filters" hidden></div>
+
+<main>
+  <section id="empty" hidden>
+    <div class="drop">
+      <h2>Aucun cycle en base pour l'instant</h2>
+      <p>Déposez des exports <b>.xls</b> dans l'onglet Dépôt : ils seront intégrés en base puis affichés ici.</p>
+      <div class="actions"><button class="primary" data-goto="depot">Aller au dépôt</button></div>
+    </div>
+  </section>
+
+  <section id="tab-depot" hidden>
+    <div class="drop">
+      <h2>Déposer des exports en base</h2>
+      <p>Glissez ici des fichiers <b>.xls</b> exportés par les boîtiers de perçage, ou un dossier entier.
+        Chaque fichier est lu dans votre navigateur puis intégré en base ; un fichier déjà importé est reconnu et ignoré.</p>
+      <p>Un <b>.csv</b> avec une colonne <code>source_file</code> (par exemple <code>verite_terrain.csv</code>) est joint aux cycles
+        des tableaux de bord, sur cet ordinateur seulement : il n'est pas envoyé en base.</p>
+      <div class="actions">
+        <button class="primary" data-pick="files">Choisir des fichiers</button>
+        <button data-pick="folder">Choisir un dossier</button>
+      </div>
+    </div>
+    <div id="depot-queue" hidden>
+      <div class="toolbar">
+        <span class="status" id="depot-bilan" aria-live="polite"></span>
+        <span class="spacer"></span>
+        <button class="ghost" id="depot-retry" hidden>Relancer les erreurs</button>
+        <button class="ghost" id="depot-clear" hidden>Vider la liste</button>
+      </div>
+      <div class="progress wide" id="depot-bar"><div></div></div>
+      <div class="tablewrap"><table class="data depot"><tbody id="depot-list"></tbody></table></div>
+    </div>
+    <h3 class="section-title">Derniers dépôts en base</h3>
+    <div class="tablewrap"><table class="data" id="journal"></table></div>
+  </section>
+
+  <section id="tab-dash" hidden>
+    <div class="kpis" id="kpis"></div>
+    <div class="toolbar">
+      <button class="primary" id="btn-new-tile">+ Graphique</button>
+      <span class="spacer"></span>
+      <button class="ghost" id="btn-dash-export" title="Enregistrer la disposition dans un fichier JSON">Exporter la disposition</button>
+      <button class="ghost" id="btn-dash-import">Importer</button>
+      <button class="ghost" id="btn-dash-reset">Disposition par défaut</button>
+      <input type="file" id="in-dash" accept=".json" hidden>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="tab-cycle" hidden>
+    <div class="detail-top">
+      <label class="field">Cycle
+        <input type="search" id="cycle-search" list="cycle-list" placeholder="Nom de fichier…">
+      </label>
+      <datalist id="cycle-list"></datalist>
+      <button id="cycle-prev" title="Cycle précédent dans la sélection">←</button>
+      <button id="cycle-next" title="Cycle suivant dans la sélection">→</button>
+      <button id="cycle-compare" title="Superposer un autre cycle (3 au maximum)">+ Comparer</button>
+      <label class="field">Axe horizontal
+        <select id="cycle-x"><option value="t">Temps (s)</option><option value="pos">Position (mm)</option></select>
+      </label>
+      <div class="chips" id="cycle-chips"></div>
+    </div>
+    <div id="cycle-body"></div>
+  </section>
+
+  <section id="tab-data" hidden>
+    <div class="toolbar"><span class="status" id="data-count"></span></div>
+    <div class="tablewrap"><table class="data" id="table"></table></div>
+  </section>
+
+  <details class="errors" id="errors" hidden><summary></summary><ul></ul></details>
+</main>
+
+<dialog id="tile-dialog">
+  <form method="dialog" id="tile-form">
+    <h2 id="tile-dialog-title">Graphique</h2>
+    <label class="field">Titre <input type="text" name="title" required></label>
+    <div class="row">
+      <label class="field">Type
+        <select name="type">
+          <option value="bar">Barres</option>
+          <option value="line">Courbe</option>
+          <option value="scatter">Nuage de points</option>
+          <option value="hist">Histogramme</option>
+          <option value="box">Boîtes à moustaches</option>
+        </select>
+      </label>
+      <label class="field">Largeur
+        <select name="width"><option value="half">Demi</option><option value="full">Pleine</option></select>
+      </label>
+    </div>
+    <div class="row">
+      <label class="field" data-role="x">Axe X <select name="x"></select></label>
+      <label class="field" data-role="y">Axe Y <select name="y"></select></label>
+    </div>
+    <div class="row">
+      <label class="field" data-role="agg">Agrégat
+        <select name="agg">
+          <option value="count">Nombre de cycles</option>
+          <option value="mean">Moyenne</option>
+          <option value="median">Médiane</option>
+          <option value="sum">Somme</option>
+          <option value="min">Minimum</option>
+          <option value="max">Maximum</option>
+          <option value="pct_nok">% de cycles NOK</option>
+        </select>
+      </label>
+      <label class="field" data-role="color">Couleur par <select name="color"></select></label>
+    </div>
+    <p class="hint" id="tile-hint"></p>
+    <menu>
+      <button value="cancel" formnovalidate>Annuler</button>
+      <button value="ok" class="primary">Enregistrer</button>
+    </menu>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<!-- Lecture d'un export dans un worker. IMPORT : même découpage que scripts/charger_cycles.py. -->
+<script type="text/plain" id="worker-src">
+function splitCells(line) {
+  const c = line.split("\t");
+  while (c.length && c[c.length - 1] === "") c.pop();
+  return c;
+}
+function sections(text) {
+  const out = new Map();
+  let cur = null;
+  for (const line of text.split(/\r\n|\r|\n/)) {
+    if (line.trimStart().startsWith("***")) {
+      const first = line.split("\t")[0].trim();
+      if (first.endsWith("***")) {
+        cur = [];
+        out.set(first.replace(/^[* ]+|[* ]+$/g, "").trim(), cur);
+        continue;
+      }
+    }
+    if (cur) cur.push(line);
+  }
+  return out;
+}
+function keyValues(lines) {
+  const rows = (lines || []).map(splitCells);
+  const out = {};
+  let i = 0;
+  while (i < rows.length) {
+    const h = rows[i];
+    if (!h.length) { i++; continue; }
+    const v = rows[i + 1] || [];
+    if (h.length === 1 && h[0].trim() === "Comment") { out.Comment = v.join("\t").trim(); i += 2; continue; }
+    h.forEach((label, j) => { out[label.trim()] = j < v.length ? v[j].trim() : ""; });
+    i += 2;
+  }
+  return out;
+}
+function table(lines) {
+  const rows = (lines || []).map(splitCells).filter((r) => r.length);
+  if (!rows.length) return { header: [], rows: [] };
+  return { header: rows[0].map((h) => h.trim()), rows: rows.slice(1).map((r) => r.map((c) => c.trim())) };
+}
+function parse(text, fileName, withSamples) {
+  const sec = sections(text);
+  for (const s of ["General Infos", "Control Box Datas", "Datas"]) {
+    if (!sec.has(s)) throw new Error("pas un export de cycle (section « " + s + " » absente)");
+  }
+  const g = keyValues(sec.get("General Infos"));
+  const comma = (g["Decimal Separator separator"] || g["Decimal Separator"] || "").trim().toLowerCase().startsWith("comma");
+  const num = (v) => {
+    if (v == null) return null;
+    let s = String(v).trim();
+    if (comma) s = s.replaceAll(",", ".");
+    if (s === "" || /^[-+]?(inf|nan)$/i.test(s)) return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  };
+  const txt = (v) => (v == null ? null : String(v).trim() || null);
+  const d = /^(\d{4}-\d{2}-\d{2}):(\d{2}:\d{2}:\d{2})$/.exec((g.Date || "").trim());
+  if (!d) throw new Error("date du cycle illisible : « " + (g.Date || "") + " »");
+  const box = keyValues(sec.get("Control Box Datas"));
+  const motor = keyValues(sec.get("Motor Datas"));
+  const head = keyValues(sec.get("Head Datas"));
+  const pset = keyValues(sec.get("Pset"));
+  const res = keyValues(sec.get("Results"));
+  const rate = num(g["Sample Rate (Hz)"]) || 100;
+  const psetNb = num(pset["Pset Nb."]);
+  const psetVer = num(pset.Version);
+  const okRaw = (res["Cycle OK"] || "").trim().toLowerCase();
+  const r = {
+    source_file: fileName,
+    started_at: d[1] + "T" + d[2],
+    jour: d[1],
+    heure: Number(d[2].slice(0, 2)),
+    cycle_id: num(g["Drilling Cycle ID"]),
+    origine: (g.Synthetic || "").trim().toLowerCase() === "true" ? "Synthétique" : "Réel",
+    box_sn: txt(box["BOX SN"]),
+    box_name: txt(box["BOX Name"]),
+    firmware: txt(box["BOX Firmware Version"]),
+    motor_name: txt(motor["Motor Name"]),
+    head_name: txt(head["Head Name"]),
+    head_uid: txt(head["Head TAG UID"]),
+    head_type: txt(head["Head Type"]),
+    head_global_counter: num(head["Head Global Counter"]),
+    head_local_counter_1: num(head["Head Local Counter 1"]),
+    head_local_counter_2: num(head["Head Local Counter 2"]),
+    programme: psetNb == null ? null : "Pset " + psetNb + (psetVer == null ? "" : " v" + psetVer),
+    pset_nb: psetNb == null ? null : "Pset " + psetNb,
+    cycle_time_s: num(res["Cycle Time (s)"]),
+    distance_mm: num(res["Distance (mm)"]),
+    cycle_ok: ["true", "on", "yes", "1"].includes(okRaw) ? "OK" : ["false", "off", "no", "0"].includes(okRaw) ? "NOK" : null,
+  };
+  r.key = (r.box_sn || "?") + "|" + (r.cycle_id ?? fileName);
+
+  const steps = table(sec.get("Step Results"));
+  const col = (name) => steps.header.indexOf(name);
+  let stopMax = null;
+  for (const row of steps.rows) {
+    const n = num(row[col("Step Number")]);
+    if (n == null) continue;
+    const p = "e" + n + "_";
+    r[p + "duree_s"] = num(row[col("Duration (s)")]);
+    r[p + "stop_code"] = num(row[col("Stop Code")]);
+    r[p + "m1_max_a"] = num(row[col("M1 Max Amp")]);
+    r[p + "m2_max_a"] = num(row[col("M2 Max Amp")]);
+    r[p + "distance_m2"] = num(row[col("Distance M2")]);
+    const sc = r[p + "stop_code"];
+    if (sc != null && (stopMax == null || sc > stopMax)) stopMax = sc;
+  }
+  r.nb_etapes = steps.rows.length;
+
+  const datas = sec.get("Datas");
+  let h = 0;
+  while (h < datas.length && !datas[h].trim()) h++;
+  const header = (datas[h] || "").split("\t").map((s) => s.trim());
+  const idx = (name) => header.indexOf(name);
+  const I = {
+    pos: idx("Position (mm)"), tq: idx("I Torque (A)"), th: idx("I Thrust (A)"),
+    tqe: idx("I Torque Empty (A)"), the: idx("I Thrust Empty (A)"), step: idx("Step (nb)"),
+    stop: idx("Stop code"), pw: idx("Torque Power (W)"), gap: idx("Gap Length (mm)"),
+  };
+  if (I.tq < 0 || I.th < 0) throw new Error("colonnes de mesure absentes");
+  const lines = [];
+  for (let i = h + 1; i < datas.length; i++) if (datas[i].trim()) lines.push(datas[i]);
+  const n = lines.length;
+  const keep = withSamples ? {} : null;
+  if (keep) for (const k of Object.keys(I)) keep[k] = new Float32Array(n).fill(NaN);
+  let tqMax = -Infinity, thMax = -Infinity, pwMax = -Infinity, posMax = -Infinity, posMin = Infinity, gapMax = -Infinity;
+  let tqSum = 0, thSum = 0, netSum = 0, pwSum = 0, cnt = 0;
+  const per = new Map();
+  for (let i = 0; i < n; i++) {
+    const c = lines[i].split("\t");
+    const get = (j) => (j < 0 || j >= c.length ? null : num(c[j]));
+    const tq = get(I.tq), th = get(I.th), tqe = get(I.tqe), pos = get(I.pos), pw = get(I.pw), gap = get(I.gap), st = get(I.step);
+    if (keep) {
+      keep.pos[i] = pos ?? NaN; keep.tq[i] = tq ?? NaN; keep.th[i] = th ?? NaN;
+      keep.tqe[i] = tqe ?? NaN; keep.the[i] = get(I.the) ?? NaN; keep.step[i] = st ?? NaN;
+      keep.stop[i] = get(I.stop) ?? NaN; keep.pw[i] = pw ?? NaN; keep.gap[i] = gap ?? NaN;
+    }
+    if (tq != null) { tqSum += tq; if (tq > tqMax) tqMax = tq; netSum += tq - (tqe || 0); }
+    if (th != null) { thSum += th; if (th > thMax) thMax = th; }
+    if (pw != null) { pwSum += pw; if (pw > pwMax) pwMax = pw; }
+    if (pos != null) { if (pos > posMax) posMax = pos; if (pos < posMin) posMin = pos; }
+    if (gap != null && gap > gapMax) gapMax = gap;
+    cnt++;
+    if (st != null && st > 0) {
+      let a = per.get(st);
+      if (!a) per.set(st, (a = { n: 0, tq: 0, th: 0, tqMax: -Infinity }));
+      a.n++; a.tq += tq || 0; a.th += th || 0; if (tq != null && tq > a.tqMax) a.tqMax = tq;
+    }
+  }
+  const fin = (v) => (Number.isFinite(v) ? Math.round(v * 1000) / 1000 : null);
+  Object.assign(r, {
+    nb_mesures: n,
+    duree_mesures_s: fin(n / rate),
+    couple_max_a: fin(tqMax), couple_moy_a: fin(cnt ? tqSum / cnt : NaN), couple_net_moy_a: fin(cnt ? netSum / cnt : NaN),
+    poussee_max_a: fin(thMax), poussee_moy_a: fin(cnt ? thSum / cnt : NaN),
+    puissance_max_w: fin(pwMax), energie_kj: fin(pwSum / rate / 1000),
+    course_mm: fin(posMax - posMin), gap_max_mm: fin(gapMax), stop_code_max: stopMax,
+  });
+  for (const [st, a] of per) {
+    r["e" + st + "_couple_moy_a"] = fin(a.tq / a.n);
+    r["e" + st + "_poussee_moy_a"] = fin(a.th / a.n);
+    r["e" + st + "_couple_max_a"] = fin(a.tqMax);
+  }
+  if (!withSamples) return { summary: r };
+  const prog = table(sec.get("Program"));
+  return {
+    summary: r, rate, samples: keep, steps, program: prog,
+    transfer: Object.values(keep).map((a) => a.buffer),
+  };
+}
+// Document pour deposer_cycle / import_cycle. Même contrat que
+// scripts/charger_cycles.py : toute évolution doit être faite des deux côtés.
+const IMPORT = (() => {
+  const BOX_FIELDS = { "BOX Name": ["box_name", "text"], "BOX Type": ["box_type", "text"], "BOX STSE": ["box_stse", "text"],
+    "BOX Customer Info": ["customer_info", "text"], "BOX Production Date": ["production_date", "date"],
+    "BOX Power Supply Limit": ["power_supply_limit", "num"], "BOX Lub Pump Coef.": ["lub_pump_coef", "num"] };
+  const BOX_CYCLE_FIELDS = { "BOX Release": ["box_release", "text"], "BOX Firmware Version": ["box_firmware_version", "text"],
+    "BOX Maintenance Date": ["box_maintenance_date", "date"], "BOX Operation Time": ["box_operation_time", "int"],
+    "Pset Default Selection": ["pset_default_selection", "bool"] };
+  const MOTOR_FIELDS = { "Motor Name": ["motor_name", "text"], "Motor Type": ["motor_type", "text"], "Motor STSE": ["motor_stse", "text"],
+    "Motor SN": ["motor_sn", "text"], "Motor M2 Ratio": ["m2_ratio", "num"], "Motor M1 CW Ratio": ["m1_cw_ratio", "num"],
+    "Motor M1 CCW Ratio": ["m1_ccw_ratio", "num"], "Motor Winch Limit": ["winch_limit", "num"] };
+  const MOTOR_CYCLE_FIELDS = { "Motor Operation Time": ["motor_operation_time", "int"] };
+  const HEAD_FIELDS = { "Head TAG UID": ["head_tag_uid", "text"], "Head Name": ["head_name", "text"], "Head Type": ["head_type", "text"],
+    "Head M1 Ratio": ["m1_ratio", "num"], "Head M2 Ratio": ["m2_ratio", "num"], "Customer Info": ["customer_info", "text"] };
+  const HEAD_CYCLE_FIELDS = { "Head Global Counter": ["head_global_counter", "int"], "Head Local Counter 1": ["head_local_counter_1", "int"],
+    "Head Local Counter 2": ["head_local_counter_2", "int"] };
+  const PSET_FIELDS = { "Pset Type": ["pset_type", "text"], "Pset Nb.": ["pset_nb", "int"], Version: ["pset_version", "int"] };
+  const CYCLE_PARAM_FIELDS = { "Max cycles Limit 1": ["max_cycles_limit_1", "int"], "Max cycles Limit 2": ["max_cycles_limit_2", "int"],
+    "CC Pressure": ["cc_pressure", "num"], "Max Stroke (mm)": ["max_stroke_mm", "num"], "Vacuum Delay (ms)": ["vacuum_delay_ms", "num"],
+    "Vacuum Flow min (m/s)": ["vacuum_flow_min_ms", "num"], "Retract Rotation Speed (rpm)": ["retract_rotation_speed_rpm", "num"],
+    "Retract Feed (m/s)": ["retract_feed_ms", "num"], "Disable Abort": ["disable_abort", "bool"], Comment: ["comment", "text"],
+    "Cutting tool breakage On/Off": ["tool_breakage_on", "bool"], "Cutting tool breakage DEP (mm)": ["tool_breakage_dep_mm", "num"],
+    "Cutting tool breakage Thrust (A)": ["tool_breakage_thrust_a", "num"], "Cutting tool breakage Torque (A)": ["tool_breakage_torque_a", "num"],
+    "Lub Preload Time (s)": ["lub_preload_time_s", "num"], "Lub Preload Lub Air": ["lub_preload_lub_air", "num"],
+    "Lub Preload Lub Flow": ["lub_preload_lub_flow", "num"], "Lub Preload Timeout (s)": ["lub_preload_timeout_s", "num"] };
+  const RESULT_FIELDS = { "Cycle Time (s)": ["cycle_time_s", "num"], "Distance (mm)": ["distance_mm", "num"], "Cycle OK": ["cycle_ok", "bool"] };
+  const PROGRAM_STEP_FIELDS = { "Step Nb": ["step_nb", "int"], "Step On/Off": ["step_on", "bool"], "Stroke (mm)": ["stroke_mm", "num"],
+    RPM: ["rpm", "num"], "Feed (mm/s)": ["feed_mm_s", "num"], "Feed (mm/tr)": ["feed_mm_tr", "num"], "Thrust Max (A)": ["thrust_max_a", "num"],
+    "Torque Max (A)": ["torque_max_a", "num"], "Thrust Min (A)": ["thrust_min_a", "num"], "Torque Min (A)": ["torque_min_a", "num"],
+    "Thrust Safety (A)": ["thrust_safety_a", "num"], "Torque Safety (A)": ["torque_safety_a", "num"], "Gap (mm)": ["gap_mm", "num"],
+    "Peck (nb)": ["peck_nb", "num"], "Delay (ms)": ["delay_ms", "num"], "Stroke Limit (A)": ["stroke_limit_a", "num"],
+    "Thrust Limit (A)": ["thrust_limit_a", "num"], "Torque Limit (A)": ["torque_limit_a", "num"], "LUB AIR": ["lub_air", "num"],
+    "LUB FLOW": ["lub_flow", "num"], Vacuum: ["vacuum", "num"], Material: ["material", "num"] };
+  const STEP_RESULT_FIELDS = { "Step Number": ["step_nb", "int"], "Stop Code": ["stop_code", "int"], "Duration (s)": ["duration_s", "num"],
+    "Distance M1": ["distance_m1", "num"], "Distance M2": ["distance_m2", "num"], "M1 Max Amp": ["m1_max_amp", "num"],
+    "M2 Max Amp": ["m2_max_amp", "num"], "M1 No Load Amp": ["m1_no_load_amp", "num"], "M2 No Load Amp": ["m2_no_load_amp", "num"],
+    "Gap Max (mm)": ["gap_max_mm", "num"] };
+  const SAMPLE_FIELDS = { "Position (mm)": "position_mm", "I Torque (A)": "i_torque_a", "I Thrust (A)": "i_thrust_a",
+    "I Torque Empty (A)": "i_torque_empty_a", "I Thrust Empty (A)": "i_thrust_empty_a", "Step (nb)": "step_nb", "Stop code": "stop_code",
+    "Mem Torque min (A)": "mem_torque_min_a", "Mem Thrust min (A)": "mem_thrust_min_a", "Torque Power (W)": "torque_power_w",
+    "Gap Length (mm)": "gap_length_mm" };
+  const GENERAL_FIELDS = new Set(["Version", "Date", "Sample Rate (Hz)", "Drilling Cycle ID", "Decimal Separator separator", "Decimal Separator", "Synthetic"]);
+  const KNOWN_SECTIONS = new Set(["General Infos", "Control Box Datas", "Motor Datas", "Head Datas", "Pset", "Cycle Parameters",
+    "Program", "Results", "Step Results", "Datas"]);
+
+  function splitSections(text) {
+    const sections = new Map();
+    let current = null;
+    for (const line of text.split(/\r\n|\r|\n/)) {
+      const cells = line.split("\t");
+      while (cells.length && cells[cells.length - 1] === "") cells.pop();
+      const first = cells.length ? cells[0].trim() : "";
+      if (first.startsWith("***") && first.endsWith("***")) {
+        current = [];
+        sections.set(first.replace(/^[* ]+|[* ]+$/g, "").trim(), current);
+      } else if (current) current.push(cells);
+    }
+    return sections;
+  }
+  function kv(rows = []) {
+    const out = {};
+    let i = 0;
+    while (i < rows.length) {
+      const header = rows[i];
+      if (!header.length) { i += 1; continue; }
+      const values = rows[i + 1] ?? [];
+      if (header.length === 1 && header[0].trim() === "Comment") { out.Comment = values.join("\t").trim(); i += 2; continue; }
+      header.forEach((label, j) => { out[label.trim()] = j < values.length ? values[j].trim() : ""; });
+      i += 2;
+    }
+    return out;
+  }
+  function tableRows(rows = []) {
+    const filled = rows.filter((r) => r.length);
+    if (!filled.length) return [[], []];
+    return [filled[0].map((h) => h.trim()), filled.slice(1)];
+  }
+  function zipRow(header, row) {
+    const out = {};
+    for (let j = 0; j < Math.min(header.length, row.length); j++) out[header[j]] = row[j].trim();
+    return out;
+  }
+  function converter(sep) {
+    const comma = sep.trim().toLowerCase().startsWith("comma");
+    const c = {
+      num(v) {
+        let s = v.trim();
+        if (comma) s = s.replaceAll(",", ".");
+        if (s === "" || ["inf", "-inf", "nan"].includes(s.toLowerCase())) return null;
+        const n = Number(s);
+        if (Number.isNaN(n)) throw new Error("valeur numérique illisible : « " + v + " »");
+        return n === 0 ? 0 : n;
+      },
+      int(v) { const n = c.num(v); return n === null ? null : Math.round(n); },
+      bool(v) {
+        const s = v.trim().toLowerCase();
+        if (["true", "on", "yes"].includes(s)) return true;
+        if (["false", "off", "no"].includes(s)) return false;
+        const n = c.num(v);
+        return n === null ? null : n !== 0;
+      },
+      text(v) { return v.trim() || null; },
+      date(v) {
+        const s = v.trim();
+        if (!s) return null;
+        const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s);
+        if (!m) throw new Error("date illisible : « " + v + " »");
+        return m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0");
+      },
+    };
+    return c;
+  }
+  function pick(values, mapping, conv, used) {
+    const out = {};
+    for (const [label, [column, kind]] of Object.entries(mapping)) {
+      if (label in values) { out[column] = conv[kind](values[label]); used.add(label); }
+    }
+    return out;
+  }
+  function leftovers(values, used) {
+    const out = {};
+    for (const [k, v] of Object.entries(values)) if (!used.has(k) && v !== "") out[k] = v;
+    return out;
+  }
+  function stepRows(section, mapping, conv) {
+    const [header, rows] = tableRows(section);
+    return rows.map((row) => {
+      const values = zipRow(header, row), u = new Set();
+      const step = pick(values, mapping, conv, u);
+      step.extra = leftovers(values, u);
+      return step;
+    });
+  }
+  return function parseImport(text, fileName, sha256) {
+    const sections = splitSections(text);
+    for (const required of ["General Infos", "Control Box Datas", "Datas"]) {
+      if (!sections.has(required)) throw new Error("section « " + required + " » absente : ce n'est pas un export de cycle");
+    }
+    const general = kv(sections.get("General Infos"));
+    const conv = converter(general["Decimal Separator separator"] || general["Decimal Separator"] || "Point");
+    for (const f of ["Version", "Date", "Sample Rate (Hz)", "Drilling Cycle ID"]) {
+      if (!general[f]) throw new Error("champ « " + f + " » absent");
+    }
+    const d = /^(\d{4}-\d{2}-\d{2}):(\d{2}:\d{2}:\d{2})$/.exec(general.Date);
+    if (!d) throw new Error("date du cycle illisible : « " + general.Date + " »");
+    const doc = {
+      source_file: fileName, source_sha256: sha256,
+      file_version: conv.int(general.Version), started_at: d[1] + "T" + d[2],
+      sample_rate_hz: conv.int(general["Sample Rate (Hz)"]), drilling_cycle_id: conv.int(general["Drilling Cycle ID"]),
+      is_synthetic: (general.Synthetic ?? "").trim().toLowerCase() === "true",
+    };
+    const extra = leftovers(general, GENERAL_FIELDS);
+
+    const box = kv(sections.get("Control Box Datas"));
+    if (!box["BOX SN"]) throw new Error("BOX SN absent");
+    let used = new Set(["BOX SN"]);
+    const boxRow = { ...pick(box, BOX_FIELDS, conv, used), box_sn: conv.text(box["BOX SN"]) };
+    Object.assign(doc, pick(box, BOX_CYCLE_FIELDS, conv, used));
+    boxRow.extra = leftovers(box, used);
+    doc.box = boxRow;
+
+    const motor = kv(sections.get("Motor Datas"));
+    used = new Set();
+    const motorRow = motor["Motor Name"] ? pick(motor, MOTOR_FIELDS, conv, used) : null;
+    Object.assign(doc, pick(motor, MOTOR_CYCLE_FIELDS, conv, used));
+    if (motorRow) { motorRow.motor_sn = motorRow.motor_sn || ""; motorRow.extra = leftovers(motor, used); }
+    doc.motor = motorRow;
+
+    const head = kv(sections.get("Head Datas"));
+    used = new Set();
+    const headRow = head["Head TAG UID"] ? pick(head, HEAD_FIELDS, conv, used) : null;
+    Object.assign(doc, pick(head, HEAD_CYCLE_FIELDS, conv, used));
+    if (headRow) headRow.extra = leftovers(head, used);
+    doc.head = headRow;
+
+    const pset = kv(sections.get("Pset"));
+    const params = kv(sections.get("Cycle Parameters"));
+    used = new Set();
+    const program = pick(pset, PSET_FIELDS, conv, used);
+    const programExtra = leftovers(pset, used);
+    used = new Set();
+    Object.assign(program, pick(params, CYCLE_PARAM_FIELDS, conv, used));
+    program.extra = { ...programExtra, ...leftovers(params, used) };
+    program.steps = stepRows(sections.get("Program"), PROGRAM_STEP_FIELDS, conv);
+    doc.program = program;
+
+    const results = kv(sections.get("Results"));
+    used = new Set();
+    Object.assign(doc, pick(results, RESULT_FIELDS, conv, used));
+    Object.assign(extra, leftovers(results, used));
+    doc.step_results = stepRows(sections.get("Step Results"), STEP_RESULT_FIELDS, conv);
+
+    const [header, rows] = tableRows(sections.get("Datas"));
+    const missing = Object.keys(SAMPLE_FIELDS).filter((label) => !header.includes(label));
+    if (missing.length) throw new Error("colonnes de mesure absentes : " + missing.join(", "));
+    const samples = {};
+    for (const [label, column] of Object.entries(SAMPLE_FIELDS)) {
+      const p = header.indexOf(label);
+      samples[column] = rows.map((row) => (p < row.length ? conv.num(row[p]) : null));
+    }
+    const unmapped = header.filter((h) => !(h in SAMPLE_FIELDS));
+    if (unmapped.length) extra.unmapped_sample_columns = unmapped;
+    const unknown = {};
+    for (const [name, rs] of sections) if (!KNOWN_SECTIONS.has(name)) unknown[name] = rs;
+    if (Object.keys(unknown).length) extra.unknown_sections = unknown;
+    doc.extra = extra;
+    doc.samples = samples;
+    return doc;
+  };
+})();
+
+async function gzip(buf) {
+  const stream = new Blob([buf]).stream().pipeThrough(new CompressionStream("gzip"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+
+self.onmessage = async (e) => {
+  const { id, file, withSamples, mode } = e.data;
+  if (mode === "import") {
+    // Dépôt : empreinte, document pour la base, copie compressée. Le document est
+    // renvoyé en texte JSON (une seule chaîne à transférer, prête à envoyer).
+    let sha256 = null, size = 0, gz = null;
+    try {
+      const buf = await file.arrayBuffer();
+      size = buf.byteLength;
+      sha256 = hex(await crypto.subtle.digest("SHA-256", buf));
+      gz = await gzip(buf);
+      let text;
+      try { text = new TextDecoder("utf-8", { fatal: true }).decode(buf); }
+      catch { text = new TextDecoder("windows-1252").decode(buf); }
+      const doc = IMPORT(text, file.name, sha256);
+      const key = (doc.box.box_sn || "?") + "|" + (doc.drilling_cycle_id ?? file.name);
+      self.postMessage({ id, ok: true, doc: JSON.stringify(doc), key, sha256, size, gz }, [gz.buffer]);
+    } catch (err) {
+      self.postMessage({ id, ok: false, error: String((err && err.message) || err), sha256, size, gz }, gz ? [gz.buffer] : []);
+    }
+    return;
+  }
+  try {
+    const buf = await file.arrayBuffer();
+    let text;
+    try { text = new TextDecoder("utf-8", { fatal: true }).decode(buf); }
+    catch { text = new TextDecoder("windows-1252").decode(buf); }
+    const out = parse(text, file.name, withSamples);
+    const transfer = out.transfer || [];
+    delete out.transfer;
+    self.postMessage({ id, ok: true, ...out }, transfer);
+  } catch (err) {
+    self.postMessage({ id, ok: false, error: String((err && err.message) || err) });
+  }
+};
+</script>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------- libellés
+const LABELS = {
+  started_at: "Date et heure", jour: "Jour", heure: "Heure", cycle_id: "ID cycle", origine: "Origine",
+  source_file: "Fichier", box_sn: "Boîtier (SN)", box_name: "Boîtier (nom)", firmware: "Firmware",
+  motor_name: "Moteur", head_name: "Tête", head_uid: "Tête (UID)", head_type: "Type de tête",
+  head_global_counter: "Compteur global tête", head_local_counter_1: "Compteur local 1 (trous depuis outil neuf)",
+  head_local_counter_2: "Compteur local 2", programme: "Programme (Pset + version)", pset_nb: "Pset",
+  cycle_time_s: "Temps de cycle (s)", distance_mm: "Distance (mm)", cycle_ok: "Résultat",
+  nb_etapes: "Nombre d'étapes", nb_mesures: "Nombre de mesures", duree_mesures_s: "Durée mesurée (s)",
+  couple_max_a: "Couple max (A)", couple_moy_a: "Couple moyen (A)", couple_net_moy_a: "Couple net moyen (A, hors vide)",
+  poussee_max_a: "Poussée max (A)", poussee_moy_a: "Poussée moyenne (A)", puissance_max_w: "Puissance max (W)",
+  energie_kj: "Énergie (kJ)", course_mm: "Course (mm)", gap_max_mm: "Gap max (mm)",
+  stop_code_max: "Stop code max",
+  tool_wear: "Usure outil (vérité terrain)", tool_holes: "Trous de l'outil", tool_life_holes: "Durée de vie outil (trous)",
+  anomaly: "Anomalie injectée", anomaly_step: "Étape de l'anomalie", tool_id: "ID outil",
+};
+const STEP_LABELS = {
+  duree_s: "durée (s)", stop_code: "stop code", m1_max_a: "M1 max (A)", m2_max_a: "M2 max (A)",
+  distance_m2: "distance M2", couple_moy_a: "couple moyen (A)", poussee_moy_a: "poussée moyenne (A)",
+  couple_max_a: "couple max (A)",
+};
+function label(k) {
+  if (LABELS[k]) return LABELS[k];
+  const m = /^e(\d+)_(.+)$/.exec(k);
+  if (m && STEP_LABELS[m[2]]) return "Étape " + m[1] + " · " + STEP_LABELS[m[2]];
+  return k;
+}
+const HIDDEN = new Set(["key", "source_file", "cycle_id", "layer_thicknesses_mm"]);
+const CAT_AS_ID = new Set(["cycle_id", "drilling_cycle_id"]);
+
+// ---------------------------------------------------------------- état
+const S = {
+  cycles: new Map(),   // key -> résumé
+  files: new Map(),    // key -> File (session courante uniquement)
+  db: new Map(),       // key -> { id, rate } pour les cycles lus en base
+  joins: new Map(),    // source_file -> colonnes jointes
+  joinCols: [],
+  rows: [], filtered: [], fields: {},
+  filters: {}, dateFrom: "", dateTo: "",
+  tiles: [], tab: "dash",
+  detail: [], sampleCache: new Map(),
+  errors: [],
+  table: { sort: "started_at", dir: -1 },
+};
+const $ = (s, el = document) => el.querySelector(s);
+const nf = (v, d = 2) => v == null || Number.isNaN(v) ? "—" : Number(v).toLocaleString("fr-FR", { maximumFractionDigits: d });
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 2200);
+}
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("percage." + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("percage." + k, JSON.stringify(v)); } catch {} },
+};
+
+// ---------------------------------------------------------------- persistance des résumés (IndexedDB)
+const idb = {
+  db: null,
+  async open() {
+    if (this.db) return this.db;
+    this.db = await new Promise((res, rej) => {
+      const q = indexedDB.open("percage-dashboard", 1);
+      q.onupgradeneeded = () => { q.result.createObjectStore("cycles", { keyPath: "key" }); q.result.createObjectStore("meta"); };
+      q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
+    });
+    return this.db;
+  },
+  async tx(store, mode, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction(store, mode); const out = fn(t.objectStore(store));
+      t.oncomplete = () => res(out && out.result !== undefined ? out.result : out); t.onerror = () => rej(t.error);
+    });
+  },
+  async saveCycles(list) { try { await this.tx("cycles", "readwrite", (s) => list.forEach((r) => s.put(r))); } catch {} },
+  async saveJoins() { try { await this.tx("meta", "readwrite", (s) => s.put({ rows: [...S.joins.entries()], cols: S.joinCols }, "joins")); } catch {} },
+  async load() {
+    try {
+      const cycles = await this.tx("cycles", "readonly", (s) => s.getAll());
+      const joins = await this.tx("meta", "readonly", (s) => s.get("joins"));
+      return { cycles: cycles || [], joins };
+    } catch { return { cycles: [] }; }
+  },
+  async clear() { try { await this.tx("cycles", "readwrite", (s) => s.clear()); await this.tx("meta", "readwrite", (s) => s.clear()); } catch {} },
+};
+
+// ---------------------------------------------------------------- workers
+const workerUrl = URL.createObjectURL(new Blob([$("#worker-src").textContent], { type: "text/javascript" }));
+const pool = {
+  size: Math.max(1, Math.min(6, (navigator.hardwareConcurrency || 4) - 1)),
+  workers: [], idle: [], queue: [], pending: new Map(), seq: 0,
+  run(file, withSamples = false, mode = null) {
+    if (!this.workers.length) {
+      for (let i = 0; i < this.size; i++) {
+        const w = new Worker(workerUrl);
+        w.onmessage = (e) => { const cb = this.pending.get(e.data.id); this.pending.delete(e.data.id); this.idle.push(w); cb(e.data); this.pump(); };
+        this.workers.push(w); this.idle.push(w);
+      }
+    }
+    return new Promise((res) => { this.queue.push({ file, withSamples, mode, res }); this.pump(); });
+  },
+  pump() {
+    while (this.idle.length && this.queue.length) {
+      const w = this.idle.pop(), j = this.queue.shift(), id = ++this.seq;
+      this.pending.set(id, j.res);
+      w.postMessage({ id, file: j.file, withSamples: j.withSamples, mode: j.mode });
+    }
+  },
+};
+
+// ---------------------------------------------------------------- import
+function parseCSV(text) {
+  const firstLine = text.slice(0, text.indexOf("\n") >>> 0);
+  const sep = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ";" : ",";
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === sep) { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter((r) => r.some((c) => c.trim() !== ""));
+}
+function csvValue(v) {
+  const s = v.trim();
+  if (s === "") return null;
+  if (/^-?\d+([.,]\d+)?([eE][-+]?\d+)?$/.test(s)) return Number(s.replace(",", "."));
+  return s;
+}
+function ingestCSV(name, text) {
+  const rows = parseCSV(text);
+  if (!rows.length) return 0;
+  const header = rows[0].map((h) => h.trim());
+  const k = header.indexOf("source_file");
+  if (k < 0) { S.errors.push(name + " : pas de colonne source_file, fichier ignoré"); return 0; }
+  const base = new Set(["key", "source_file", "box_sn", "head_uid", "head_tag_uid", "cycle_ok", "started_at", "cycle_id", "drilling_cycle_id", "pset_nb", "pset_version"]);
+  const cols = header.map((h, j) => (j === k || base.has(h) ? null : h));
+  for (const r of rows.slice(1)) {
+    const o = {};
+    cols.forEach((c, j) => { if (c) o[c] = csvValue(r[j] ?? ""); });
+    S.joins.set(r[k].trim(), o);
+  }
+  S.joinCols = [...new Set([...S.joinCols, ...cols.filter(Boolean)])];
+  return rows.length - 1;
+}
+
+async function filesFromDrop(dt) {
+  const items = [...(dt.items || [])].map((i) => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (!items.length) return [...dt.files];
+  const out = [];
+  async function walk(entry) {
+    if (entry.isFile) out.push(await new Promise((res, rej) => entry.file(res, rej)));
+    else if (entry.isDirectory) {
+      const reader = entry.createReader();
+      for (;;) {
+        const batch = await new Promise((res, rej) => reader.readEntries(res, rej));
+        if (!batch.length) break;
+        for (const e of batch) await walk(e);
+      }
+    }
+  }
+  for (const e of items) await walk(e);
+  return out;
+}
+
+async function ingest(fileList) {
+  const files = [...fileList].filter((f) => !f.name.startsWith(".") && f.size > 0);
+  if (!files.length) return;
+  // .csv : colonnes jointes aux cycles, sur ce poste ; le reste part en base.
+  const csvs = files.filter((f) => /\.csv$/i.test(f.name));
+  const exps = files.filter((f) => !/\.csv$/i.test(f.name));
+  if (csvs.length) {
+    let joined = 0;
+    for (const f of csvs) joined += ingestCSV(f.name, await f.text());
+    idb.saveJoins();
+    toast(joined + " ligne(s) jointe(s) depuis " + csvs.map((f) => f.name).join(", "));
+    refresh();
+  }
+  if (exps.length) { depot.add(exps); setTab("depot"); }
+}
+
+// ---------------------------------------------------------------- dépôt en base
+// File d'envoi : chaque fichier est lu par un worker (document, empreinte, copie
+// compressée), la copie part dans le bucket "exports", puis deposer_cycle l'intègre
+// et le journalise. Au plus SIMULTANES fichiers à la fois.
+const depot = {
+  SIMULTANES: 3,
+  items: [], ignored: 0, running: 0, seq: 0, journalLoaded: false,
+  add(files) {
+    const ok = files.filter((f) => /\.xls$/i.test(f.name));
+    this.ignored += files.length - ok.length;
+    for (const file of ok) this.items.push({ id: ++this.seq, file, etat: "attente", message: "" });
+    this.render(); this.pump();
+  },
+  pump() {
+    for (const it of this.items) {
+      if (this.running >= this.SIMULTANES) break;
+      if (it.etat !== "attente") continue;
+      it.etat = "envoi"; this.running++;
+      this.send(it).finally(() => {
+        this.running--; this.render();
+        if (this.running === 0 && !this.items.some((x) => x.etat === "attente")) this.done();
+        else this.pump();
+      });
+    }
+    this.render();
+  },
+  async send(it) {
+    try {
+      const m = await pool.run(it.file, false, "import");
+      let storagePath = null;
+      if (m.gz && m.sha256) {
+        const path = "depots/" + m.sha256.slice(0, 2) + "/" + m.sha256 + ".xls.gz";
+        const { error } = await sb.storage.from("exports").upload(path, new Blob([m.gz], { type: "application/gzip" }), { contentType: "application/gzip", upsert: false });
+        if (!error || /exist|duplicate/i.test(error.message)) storagePath = path;
+      }
+      const { data, error } = await sb.rpc("deposer_cycle", {
+        p: m.ok ? JSON.parse(m.doc) : null,
+        p_file_name: it.file.name, p_sha256: m.sha256, p_size_bytes: m.size,
+        p_storage_path: storagePath, p_erreur: m.ok ? null : "Format non reconnu : " + m.error,
+      });
+      if (error) throw new Error(error.message);
+      it.etat = data.status;
+      it.message = data.status === "importé" ? nf(data.samples, 0) + " mesures" : data.message || "";
+      if (m.ok && data.status !== "erreur") S.files.set(m.key, it.file);   // courbes lues depuis le fichier, plus rapide
+    } catch (err) {
+      it.etat = "erreur";
+      it.message = (err && err.message) || "Envoi interrompu : vérifiez la connexion.";
+    }
+  },
+  async done() {
+    const n = (e) => this.items.filter((x) => x.etat === e).length;
+    toast(n("importé") + " importé(s) · " + n("doublon") + " déjà en base · " + n("erreur") + " en erreur");
+    this.loadJournal();
+    if (n("importé")) await base.loadCycles();
+  },
+  render() {
+    cancelAnimationFrame(this.frame);
+    this.frame = requestAnimationFrame(() => {
+      const total = this.items.length, n = (e) => this.items.filter((x) => x.etat === e).length;
+      const fini = n("importé") + n("doublon") + n("erreur"), actif = fini < total;
+      $("#depot-queue").hidden = !total;
+      if (!total) return;
+      $("#depot-bilan").textContent = fini + " sur " + total + " traité(s) · " + n("importé") + " importé(s) · " +
+        n("doublon") + " déjà en base · " + n("erreur") + " en erreur" + (this.ignored ? " · " + this.ignored + " ignoré(s) (pas .xls)" : "");
+      $("#depot-bar").firstElementChild.style.width = (100 * fini / total) + "%";
+      $("#depot-retry").hidden = actif || !n("erreur");
+      $("#depot-clear").hidden = actif;
+      const LBL = { attente: "en attente", envoi: "envoi…", importé: "importé", doublon: "déjà en base", erreur: "erreur" };
+      // les en cours et les erreurs d'abord, puis les plus récents
+      const shown = [...this.items].sort((a, b) => (a.etat === "envoi" || a.etat === "erreur" ? 0 : 1) - (b.etat === "envoi" || b.etat === "erreur" ? 0 : 1) || b.id - a.id).slice(0, 300);
+      $("#depot-list").innerHTML = shown.map((it) => "<tr><td>" + esc(it.file.name) + '</td><td class="num">' +
+        nf(it.file.size / 1000, 0) + ' ko</td><td><span class="etat ' + it.etat + '">' + LBL[it.etat] + '</span></td><td class="msg">' + esc(it.message) + "</td></tr>").join("") +
+        (total > shown.length ? '<tr><td colspan="4" class="msg">… et ' + nf(total - shown.length, 0) + " autre(s)</td></tr>" : "");
+    });
+  },
+  async loadJournal() {
+    this.journalLoaded = true;
+    const { data, error } = await sb.from("import_file")
+      .select("created_at, file_name, status, message, source, uploaded_by_email")
+      .order("created_at", { ascending: false }).limit(50);
+    const t = $("#journal");
+    if (error) { t.innerHTML = '<tbody><tr><td class="msg">Journal illisible : ' + esc(error.message) + "</td></tr></tbody>"; return; }
+    if (!data.length) { t.innerHTML = '<tbody><tr><td class="msg">Aucun dépôt pour l\'instant.</td></tr></tbody>'; return; }
+    const quand = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" });
+    t.innerHTML = "<thead><tr><th>Date</th><th>Fichier</th><th>État</th><th>Message</th><th>Par</th></tr></thead><tbody>" +
+      data.map((r) => "<tr><td>" + quand.format(new Date(r.created_at)) + "</td><td>" + esc(r.file_name) + '</td><td><span class="etat ' + esc(r.status) + '">' +
+        (r.status === "doublon" ? "déjà en base" : esc(r.status)) + '</span></td><td class="msg">' + esc(r.message) + "</td><td>" +
+        esc(r.source === "cli" ? "script" : r.uploaded_by_email || "") + "</td></tr>").join("") + "</tbody>";
+  },
+};
+$("#depot-retry").onclick = () => { depot.items.forEach((x) => { if (x.etat === "erreur") { x.etat = "attente"; x.message = ""; } }); depot.pump(); };
+$("#depot-clear").onclick = () => { depot.items = []; depot.ignored = 0; depot.render(); };
+addEventListener("beforeunload", (e) => { if (depot.running) { e.preventDefault(); e.returnValue = ""; } });
+
+// ---------------------------------------------------------------- données dérivées
+function buildRows() {
+  S.rows = [...S.cycles.values()].map((r) => {
+    const j = S.joins.get(r.source_file);
+    return j ? { ...j, ...r } : r;
+  });
+  S.rows.sort((a, b) => (a.started_at < b.started_at ? -1 : 1));
+  // catalogue des champs, déduit des données
+  const info = {};
+  for (const r of S.rows) {
+    for (const k in r) {
+      const v = r[k];
+      if (v == null) continue;
+      const f = info[k] || (info[k] = { key: k, nNum: 0, nStr: 0, values: new Map() });
+      if (typeof v === "number") f.nNum++; else f.nStr++;
+      if (f.values.size <= 200) f.values.set(v, (f.values.get(v) || 0) + 1);
+    }
+  }
+  const fields = {};
+  for (const k in info) {
+    const f = info[k];
+    let kind = f.nStr === 0 ? "num" : "cat";
+    if (k === "jour") kind = "day";
+    if (k === "started_at") kind = "date";
+    if (CAT_AS_ID.has(k)) kind = "id";
+    fields[k] = { key: k, label: label(k), kind, distinct: f.values.size, values: f.values };
+  }
+  S.fields = fields;
+  S.colorMaps = {};
+}
+const fieldsOf = (...kinds) => Object.values(S.fields)
+  .filter((f) => kinds.includes(f.kind) && !HIDDEN.has(f.key) && (f.kind !== "cat" || f.distinct <= 200))
+  .sort((a, b) => order(a.key) - order(b.key) || a.label.localeCompare(b.label, "fr"));
+function order(k) {
+  const pri = ["jour", "heure", "cycle_ok", "origine", "programme", "pset_nb", "head_name", "box_sn", "motor_name", "firmware",
+    "cycle_time_s", "couple_max_a", "couple_moy_a", "couple_net_moy_a", "poussee_max_a", "poussee_moy_a", "energie_kj",
+    "head_local_counter_1", "head_global_counter"];
+  const i = pri.indexOf(k);
+  if (i >= 0) return i;
+  if (S.joinCols.includes(k)) return 50;
+  return /^e\d+_/.test(k) ? 200 : 100;
+}
+const filterable = () => fieldsOf("cat").filter((f) => f.distinct >= 2 && f.distinct <= 60);
+
+function applyFilters() {
+  const fs = Object.entries(S.filters).filter(([, v]) => v !== "");
+  S.filtered = S.rows.filter((r) => {
+    if (S.dateFrom && r.jour < S.dateFrom) return false;
+    if (S.dateTo && r.jour > S.dateTo) return false;
+    for (const [k, v] of fs) if (String(r[k] ?? "(vide)") !== v) return false;
+    return true;
+  });
+}
+
+// ---------------------------------------------------------------- couleurs
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function theme() {
+  return {
+    surface: css("--surface"), text: css("--text"), text2: css("--text-2"), muted: css("--muted"),
+    grid: css("--grid"), axis: css("--axis"), border: css("--border"), band: css("--band"),
+    series: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => css("--s" + i)), good: css("--good"), critical: css("--critical"),
+  };
+}
+// La couleur suit l'entité : calculée sur toutes les données chargées, pas sur la sélection filtrée.
+function colorMap(field) {
+  if (S.colorMaps[field]) return S.colorMaps[field];
+  const T = theme();
+  const counts = new Map();
+  for (const r of S.rows) { const v = r[field] ?? "(vide)"; counts.set(v, (counts.get(v) || 0) + 1); }
+  let keys = [...counts.keys()];
+  const other = "Autres";
+  let folded = new Set();
+  if (keys.length > 8) {
+    const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 7).map((e) => e[0]);
+    folded = new Set(keys.filter((k) => !top.includes(k)));
+    keys = top;
+  }
+  keys.sort((a, b) => String(a).localeCompare(String(b), "fr", { numeric: true }));
+  const colors = new Map(keys.map((k, i) => [k, T.series[i]]));
+  if (field === "cycle_ok") { colors.set("OK", T.good); colors.set("NOK", T.critical); }
+  if (folded.size) { keys.push(other); colors.set(other, T.muted); }
+  const m = {
+    order: keys, color: (k) => colors.get(k) || T.muted,
+    fold: (v) => { v = v ?? "(vide)"; return folded.has(v) ? other : v; },
+    name: (k) => field === "cycle_ok" ? (k === "OK" ? "✓ OK" : k === "NOK" ? "✕ NOK" : String(k)) : String(k),
+  };
+  S.colorMaps[field] = m;
+  return m;
+}
+function groupBy(rows, field) {
+  if (!field) return [{ name: null, rows, color: theme().series[0] }];
+  const cm = colorMap(field), g = new Map();
+  for (const r of rows) { const k = cm.fold(r[field]); if (!g.has(k)) g.set(k, []); g.get(k).push(r); }
+  return cm.order.filter((k) => g.has(k)).map((k) => ({ name: cm.name(k), key: k, rows: g.get(k), color: cm.color(k) }));
+}
+function aggregate(rows, agg, y) {
+  if (agg === "count") return rows.length;
+  if (agg === "pct_nok") { const n = rows.filter((r) => r.cycle_ok).length; return n ? 100 * rows.filter((r) => r.cycle_ok === "NOK").length / n : null; }
+  const v = rows.map((r) => r[y]).filter((x) => typeof x === "number");
+  if (!v.length) return null;
+  if (agg === "sum") return v.reduce((a, b) => a + b, 0);
+  if (agg === "mean") return v.reduce((a, b) => a + b, 0) / v.length;
+  if (agg === "min") return Math.min(...v);
+  if (agg === "max") return Math.max(...v);
+  if (agg === "median") { v.sort((a, b) => a - b); const m = v.length >> 1; return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2; }
+  return null;
+}
+const AGG_LABEL = { count: "Nombre de cycles", pct_nok: "% de cycles NOK", mean: "Moyenne", median: "Médiane", sum: "Somme", min: "Minimum", max: "Maximum" };
+const yTitle = (t) => t.agg === "count" || t.agg === "pct_nok" ? AGG_LABEL[t.agg] : AGG_LABEL[t.agg] + " · " + label(t.y);
+
+// ---------------------------------------------------------------- Plotly
+function baseLayout(extra = {}) {
+  const T = theme();
+  const ax = () => ({ gridcolor: T.grid, linecolor: T.axis, zeroline: false, tickfont: { color: T.muted, size: 11 }, title: { text: "", font: { color: T.text2, size: 12 } }, automargin: true });
+  return Object.assign({
+    paper_bgcolor: T.surface, plot_bgcolor: T.surface,
+    font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: T.text2, size: 12 },
+    margin: { l: 52, r: 12, t: 30, b: 44 },
+    xaxis: ax(), yaxis: ax(),
+    legend: { orientation: "h", x: 0, y: 1.02, yanchor: "bottom", font: { color: T.text2, size: 12 }, bgcolor: "rgba(0,0,0,0)" },
+    hoverlabel: { bgcolor: T.surface, bordercolor: T.axis, font: { color: T.text, size: 12 } },
+    bargap: 0.18,
+  }, extra);
+}
+const PCONF = { displaylogo: false, responsive: true, modeBarButtonsToRemove: ["select2d", "lasso2d", "autoScale2d", "toggleSpikelines"] };
+
+// ---------------------------------------------------------------- tuiles
+const DEFAULT_TILES = [
+  { title: "Cycles par jour", type: "bar", x: "jour", agg: "count", color: "cycle_ok", width: "full" },
+  { title: "Usure : couple max selon le compteur outil", type: "scatter", x: "head_local_counter_1", y: "couple_max_a", color: "programme", width: "half" },
+  { title: "Couple max par tête", type: "box", x: "head_name", y: "couple_max_a", width: "half" },
+  { title: "Distribution du temps de cycle", type: "hist", x: "cycle_time_s", color: "pset_nb", width: "half" },
+  { title: "Taux de NOK par tête", type: "bar", x: "head_name", agg: "pct_nok", width: "half" },
+  { title: "Couple moyen par jour et par boîtier", type: "line", x: "jour", y: "couple_moy_a", agg: "mean", color: "box_sn", width: "full" },
+];
+function tileDesc(t) {
+  const f = (k) => (k ? label(k) : "");
+  switch (t.type) {
+    case "scatter": return f(t.y) + " selon " + f(t.x) + (t.color ? " · couleur : " + f(t.color) : "") + " · cliquez un point pour ouvrir le cycle";
+    case "hist": return "Répartition de " + f(t.x) + (t.color ? " · par " + f(t.color) : "");
+    case "box": return f(t.y) + " par " + f(t.x);
+    default: return yTitle(t) + " par " + f(t.x) + (t.color ? " · par " + f(t.color) : "") + (S.fields[t.x]?.kind === "cat" ? " · cliquez une barre pour filtrer" : "");
+  }
+}
+function tileMissing(t) {
+  const need = [t.x];
+  if (["scatter", "box"].includes(t.type) || (["bar", "line"].includes(t.type) && !["count", "pct_nok"].includes(t.agg))) need.push(t.y);
+  if (t.color) need.push(t.color);
+  return need.filter((k) => k && !S.fields[k]);
+}
+// Quelques cycles très éloignés dans le temps (un export réel de 2017 parmi des synthétiques
+// de 2026) écrasent l'axe : on cadre sur la masse des données, double-clic pour tout voir.
+function denseRange(rows, field) {
+  const ts = rows.map((r) => Date.parse(String(r[field]).slice(0, 10))).filter(Number.isFinite).sort((a, b) => a - b);
+  if (ts.length < 10) return null;
+  let gap = 0, at = 0;
+  for (let i = 1; i < ts.length; i++) if (ts[i] - ts[i - 1] > gap) { gap = ts[i] - ts[i - 1]; at = i; }
+  const span = ts[ts.length - 1] - ts[0], day = 864e5;
+  if (gap < 30 * day || gap < span / 2) return null;
+  const [lo, hi] = at > ts.length / 2 ? [ts[0], ts[at - 1]] : [ts[at], ts[ts.length - 1]];
+  if (Math.min(at, ts.length - at) > ts.length * 0.1) return null;
+  const iso = (x) => new Date(x).toISOString().slice(0, 10);
+  return [iso(lo - day), iso(hi + day)];
+}
+function renderTile(t, el) {
+  const rows = S.filtered;
+  const missing = tileMissing(t);
+  if (missing.length) { el.innerHTML = '<div class="empty">Champ absent des données chargées : ' + missing.map((k) => esc(label(k))).join(", ") + "</div>"; return; }
+  if (!rows.length) { el.innerHTML = '<div class="empty">Aucun cycle dans la sélection.</div>'; return; }
+  if (!el.classList.contains("plot")) { el.innerHTML = ""; el.className = "plot"; }
+  const T = theme();
+  let traces = [], layout = baseLayout();
+  const groups = groupBy(rows, t.color);
+  const showLegend = groups.length > 1;
+  const xKind = S.fields[t.x]?.kind;
+  if (xKind === "day" || xKind === "date") { layout.xaxis.type = "date"; const r = denseRange(rows, t.x); if (r) layout.xaxis.range = r; }
+  else if (xKind === "cat") layout.xaxis.type = "category";
+
+  if (t.type === "scatter") {
+    const gl = rows.length > 1500;
+    traces = groups.map((g) => ({
+      type: gl ? "scattergl" : "scatter", mode: "markers", name: g.name ?? label(t.y),
+      x: g.rows.map((r) => r[t.x]), y: g.rows.map((r) => r[t.y]),
+      customdata: g.rows.map((r) => [r.key, r.source_file]),
+      marker: { color: g.color, size: 8, opacity: 0.8, line: { color: T.surface, width: 1 } },
+      hovertemplate: "%{customdata[1]}<br>" + esc(label(t.x)) + " : %{x}<br>" + esc(label(t.y)) + " : %{y}<extra>" + (g.name ?? "") + "</extra>",
+    }));
+    layout.xaxis.title.text = label(t.x); layout.yaxis.title.text = label(t.y);
+  } else if (t.type === "hist") {
+    traces = groups.map((g) => ({
+      type: "histogram", name: g.name ?? label(t.x), x: g.rows.map((r) => r[t.x]), nbinsx: 40,
+      marker: { color: g.color, line: { color: T.surface, width: 1 } }, opacity: showLegend ? 0.7 : 1,
+      hovertemplate: "%{x}<br>%{y} cycle(s)<extra>" + (g.name ?? "") + "</extra>",
+    }));
+    layout.barmode = "overlay";
+    layout.xaxis.title.text = label(t.x); layout.yaxis.title.text = "Nombre de cycles";
+  } else if (t.type === "box") {
+    const cm = colorMap(t.x);
+    const g = groupBy(rows, t.x);
+    traces = g.map((grp) => ({
+      type: "box", name: cm.name(grp.key), y: grp.rows.map((r) => r[t.y]), boxpoints: "outliers",
+      marker: { color: T.series[0], size: 5 }, line: { color: T.series[0], width: 1.5 }, fillcolor: "rgba(0,0,0,0)",
+      customdata: grp.rows.map((r) => [r.key, r.source_file]),
+      hovertemplate: "%{customdata[1]}<br>%{y}<extra></extra>",
+    }));
+    layout.showlegend = false; layout.xaxis.type = "category";
+    layout.yaxis.title.text = label(t.y); layout.xaxis.title.text = label(t.x);
+  } else {
+    const xs = [...new Set(rows.map((r) => r[t.x] ?? "(vide)"))].sort((a, b) => (typeof a === "number" && typeof b === "number" ? a - b : String(a).localeCompare(String(b), "fr", { numeric: true })));
+    traces = groups.map((g) => {
+      const by = new Map();
+      for (const r of g.rows) { const k = r[t.x] ?? "(vide)"; if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
+      const x = xs.filter((k) => by.has(k));
+      const y = x.map((k) => aggregate(by.get(k), t.agg, t.y));
+      const tr = { name: g.name ?? yTitle(t), x, y, hovertemplate: "%{x}<br>%{y:.4~r}<extra>" + (g.name ?? "") + "</extra>" };
+      if (t.type === "line") Object.assign(tr, { type: "scatter", mode: x.length > 60 ? "lines" : "lines+markers", line: { color: g.color, width: 2 }, marker: { color: g.color, size: 6 } });
+      else Object.assign(tr, { type: "bar", marker: { color: g.color, line: { color: T.surface, width: 1 } } });
+      return tr;
+    });
+    layout.barmode = t.agg === "count" || t.agg === "sum" ? "stack" : "group";
+    layout.xaxis.title.text = label(t.x); layout.yaxis.title.text = yTitle(t);
+    if (t.agg === "pct_nok") layout.yaxis.ticksuffix = " %";
+    layout.hovermode = t.type === "line" ? "x unified" : "closest";
+  }
+  layout.showlegend = layout.showlegend ?? showLegend;
+  if (!layout.showlegend) layout.margin.t = 12;
+  Plotly.react(el, traces, layout, PCONF);
+  el.removeAllListeners && el.removeAllListeners("plotly_click");
+  el.on("plotly_click", (ev) => {
+    const p = ev.points && ev.points[0];
+    if (!p) return;
+    if (p.customdata && p.customdata[0]) { openDetail(p.customdata[0]); return; }
+    const f = S.fields[t.x];
+    if ((t.type === "bar") && f && f.kind === "cat" && filterable().some((q) => q.key === t.x)) {
+      S.filters[t.x] = String(p.x);
+      toast("Filtre : " + label(t.x) + " = " + p.x);
+      refresh();
+    }
+  });
+}
+function renderDash() {
+  const grid = $("#grid");
+  grid.querySelectorAll(".plot").forEach((el) => Plotly.purge(el));
+  grid.innerHTML = "";
+  if (!S.tiles.length) grid.innerHTML = '<div class="notice" style="grid-column:1/-1">Aucun graphique. Ajoutez-en un avec « + Graphique ».</div>';
+  S.tiles.forEach((t, i) => {
+    const card = document.createElement("article");
+    card.className = "tile" + (t.width === "full" ? " full" : "");
+    card.innerHTML = '<div class="head"><h3></h3><div class="tools">' +
+      '<button class="ghost" data-a="edit" title="Modifier">✎</button>' +
+      '<button class="ghost" data-a="up" title="Monter">↑</button>' +
+      '<button class="ghost" data-a="down" title="Descendre">↓</button>' +
+      '<button class="ghost" data-a="width" title="Largeur">⇔</button>' +
+      '<button class="ghost" data-a="dup" title="Dupliquer">⧉</button>' +
+      '<button class="ghost" data-a="del" title="Supprimer">✕</button></div></div>' +
+      '<div class="desc"></div><div class="plot"></div>';
+    $("h3", card).textContent = t.title;
+    $(".desc", card).textContent = tileDesc(t);
+    card.addEventListener("click", (e) => {
+      const a = e.target.closest("button")?.dataset.a;
+      if (!a) return;
+      if (a === "edit") editTile(i);
+      if (a === "del") { S.tiles.splice(i, 1); saveTiles(); renderDash(); }
+      if (a === "dup") { S.tiles.splice(i + 1, 0, { ...t, title: t.title + " (copie)" }); saveTiles(); renderDash(); }
+      if (a === "width") { t.width = t.width === "full" ? "half" : "full"; saveTiles(); renderDash(); }
+      if (a === "up" && i > 0) { [S.tiles[i - 1], S.tiles[i]] = [S.tiles[i], S.tiles[i - 1]]; saveTiles(); renderDash(); }
+      if (a === "down" && i < S.tiles.length - 1) { [S.tiles[i + 1], S.tiles[i]] = [S.tiles[i], S.tiles[i + 1]]; saveTiles(); renderDash(); }
+    });
+    grid.appendChild(card);
+    renderTile(t, $(".plot", card));
+  });
+}
+function saveTiles() { store.set("tiles.v1", S.tiles); }
+
+// éditeur de tuile
+let editing = -1;
+function fillSelect(sel, fields, value, allowNone) {
+  sel.innerHTML = (allowNone ? '<option value="">— aucune —</option>' : "") +
+    fields.map((f) => '<option value="' + esc(f.key) + '">' + esc(f.label) + "</option>").join("");
+  if (value && !fields.some((f) => f.key === value)) sel.insertAdjacentHTML("afterbegin", '<option value="' + esc(value) + '">' + esc(label(value)) + " (absent)</option>");
+  sel.value = value ?? "";
+}
+function syncTileForm(keep) {
+  const f = $("#tile-form"), type = f.type.value;
+  const cur = keep || { x: f.x.value, y: f.y.value, color: f.color.value, agg: f.agg.value };
+  const xFields = {
+    scatter: fieldsOf("num", "date", "day"), line: fieldsOf("day", "num", "cat"), bar: fieldsOf("cat", "day", "num"),
+    hist: fieldsOf("num"), box: fieldsOf("cat"),
+  }[type];
+  fillSelect(f.x, xFields, xFields.some((q) => q.key === cur.x) ? cur.x : xFields[0]?.key);
+  const nums = fieldsOf("num");
+  fillSelect(f.y, nums, nums.some((q) => q.key === cur.y) ? cur.y : nums.find((q) => q.key === "couple_max_a")?.key || nums[0]?.key);
+  fillSelect(f.color, fieldsOf("cat").filter((q) => q.distinct <= 60), cur.color, true);
+  f.agg.value = cur.agg || "count";
+  const aggUsed = type === "bar" || type === "line";
+  f.querySelector('[data-role="agg"]').hidden = !aggUsed;
+  f.querySelector('[data-role="y"]').hidden = type === "hist" || (aggUsed && ["count", "pct_nok"].includes(f.agg.value));
+  f.querySelector('[data-role="color"]').hidden = type === "box";
+  $("#tile-hint").textContent = {
+    scatter: "Un point par cycle. Cliquer un point ouvre ses courbes.",
+    line: "Une valeur agrégée par valeur de X (par exemple par jour).",
+    bar: "Une barre par valeur de X. Cliquer une barre filtre le tableau de bord.",
+    hist: "Répartition d'une mesure sur les cycles.",
+    box: "Médiane, quartiles et valeurs atypiques d'une mesure pour chaque catégorie.",
+  }[type];
+}
+function editTile(i) {
+  editing = i;
+  const t = i >= 0 ? S.tiles[i] : { title: "", type: "bar", x: "head_name", agg: "count", width: "half" };
+  const f = $("#tile-form");
+  $("#tile-dialog-title").textContent = i >= 0 ? "Modifier le graphique" : "Nouveau graphique";
+  f.title.value = t.title; f.type.value = t.type; f.width.value = t.width || "half";
+  syncTileForm(t);
+  $("#tile-dialog").showModal();
+}
+$("#tile-form").addEventListener("change", (e) => { if (["type", "agg"].includes(e.target.name)) syncTileForm(); });
+$("#tile-dialog").addEventListener("close", () => {
+  if ($("#tile-dialog").returnValue !== "ok") return;
+  const f = $("#tile-form");
+  const t = { title: f.title.value.trim() || "Graphique", type: f.type.value, x: f.x.value, width: f.width.value };
+  if (!f.querySelector('[data-role="y"]').hidden) t.y = f.y.value;
+  if (!f.querySelector('[data-role="agg"]').hidden) t.agg = f.agg.value;
+  if (!f.querySelector('[data-role="color"]').hidden && f.color.value) t.color = f.color.value;
+  if (editing >= 0) S.tiles[editing] = t; else S.tiles.push(t);
+  saveTiles(); renderDash();
+});
+
+// ---------------------------------------------------------------- KPI
+function renderKpis() {
+  const rows = S.filtered, all = S.rows.length;
+  const judged = rows.filter((r) => r.cycle_ok);
+  const ok = judged.filter((r) => r.cycle_ok === "OK").length;
+  const pct = judged.length ? (100 * ok) / judged.length : null;
+  const med = (k) => aggregate(rows, "median", k);
+  const days = rows.map((r) => r.jour).filter(Boolean);
+  const fmtDay = (d) => d ? new Date(d + "T00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "2-digit" }) : "—";
+  const k = [
+    ["Cycles", nf(rows.length, 0), rows.length === all ? "tous les cycles chargés" : "sur " + nf(all, 0) + " chargés"],
+    ["Cycles OK", pct == null ? "—" : nf(pct, 1) + " %", '<span class="badge nok"><span class="dot"></span>' + nf(judged.length - ok, 0) + " NOK</span>"],
+    ["Temps de cycle médian", nf(med("cycle_time_s"), 1) + " s", ""],
+    ["Couple max médian", nf(med("couple_max_a"), 2) + " A", ""],
+    ["Têtes · boîtiers", new Set(rows.map((r) => r.head_uid)).size + " · " + new Set(rows.map((r) => r.box_sn)).size, ""],
+    ["Période", days.length ? fmtDay(days[0]) : "—", days.length ? "au " + fmtDay(days[days.length - 1]) : ""],
+  ];
+  $("#kpis").innerHTML = k.map(([l, v, s]) => '<div class="kpi"><div class="lbl">' + l + '</div><div class="val">' + v + '</div><div class="sub">' + s + "</div></div>").join("");
+}
+
+// ---------------------------------------------------------------- filtres
+function renderFilters() {
+  const box = $("#filters");
+  const days = S.rows.map((r) => r.jour).filter(Boolean);
+  const html = [];
+  html.push('<label class="field' + (S.dateFrom ? " active" : "") + '">Du <input type="date" data-date="from" value="' + S.dateFrom + '" min="' + (days[0] || "") + '" max="' + (days.at(-1) || "") + '"></label>');
+  html.push('<label class="field' + (S.dateTo ? " active" : "") + '">Au <input type="date" data-date="to" value="' + S.dateTo + '" min="' + (days[0] || "") + '" max="' + (days.at(-1) || "") + '"></label>');
+  for (const f of filterable()) {
+    const cur = S.filters[f.key] ?? "";
+    const vals = [...f.values.keys()].map(String).sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
+    html.push('<label class="field' + (cur ? " active" : "") + '">' + esc(f.label) + '<select data-f="' + esc(f.key) + '"><option value="">Tous</option>' +
+      vals.map((v) => '<option' + (v === cur ? " selected" : "") + ' value="' + esc(v) + '">' + esc(f.key === "cycle_ok" ? (v === "OK" ? "✓ OK" : "✕ NOK") : v) + "</option>").join("") + "</select></label>");
+  }
+  const any = S.dateFrom || S.dateTo || Object.values(S.filters).some(Boolean);
+  if (any) html.push('<button class="ghost" id="btn-reset-filters">Réinitialiser les filtres</button>');
+  box.innerHTML = html.join("");
+}
+$("#filters").addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.dataset.f) S.filters[el.dataset.f] = el.value;
+  if (el.dataset.date === "from") S.dateFrom = el.value;
+  if (el.dataset.date === "to") S.dateTo = el.value;
+  refresh(false);
+});
+$("#filters").addEventListener("click", (e) => {
+  if (e.target.id === "btn-reset-filters") { S.filters = {}; S.dateFrom = S.dateTo = ""; refresh(false); }
+});
+
+// ---------------------------------------------------------------- table
+const TABLE_COLS = ["started_at", "source_file", "head_name", "box_sn", "programme", "cycle_ok", "cycle_time_s", "couple_max_a", "poussee_max_a", "energie_kj", "head_local_counter_1", "anomaly", "tool_wear"];
+function renderTable() {
+  const cols = TABLE_COLS.filter((k) => S.fields[k]);
+  const { sort, dir } = S.table;
+  const rows = [...S.filtered].sort((a, b) => {
+    const x = a[sort], y = b[sort];
+    if (x == null) return 1; if (y == null) return -1;
+    return (x < y ? -1 : x > y ? 1 : 0) * dir;
+  });
+  const shown = rows.slice(0, 500);
+  $("#data-count").textContent = nf(rows.length, 0) + " cycle(s)" + (rows.length > 500 ? " · 500 premiers affichés, tout est dans l'export CSV" : "") + " · cliquez une ligne pour ouvrir le cycle";
+  const isNum = (k) => S.fields[k]?.kind === "num";
+  const cell = (r, k) => {
+    const v = r[k];
+    if (k === "cycle_ok") return v === "OK" ? '<span class="badge ok"><span class="dot"></span>OK</span>' : v === "NOK" ? '<span class="badge nok"><span class="dot"></span>NOK</span>' : "—";
+    if (k === "started_at") return esc(v?.replace("T", " "));
+    return isNum(k) ? nf(v, 3) : esc(v ?? "—");
+  };
+  $("#table").innerHTML = "<thead><tr>" + cols.map((k) => '<th data-k="' + k + '" class="' + (isNum(k) ? "num" : "") + '">' + esc(label(k)) + (k === sort ? (dir > 0 ? " ↑" : " ↓") : "") + "</th>").join("") + "</tr></thead><tbody>" +
+    shown.map((r) => '<tr data-key="' + esc(r.key) + '">' + cols.map((k) => '<td class="' + (isNum(k) ? "num" : "") + '">' + cell(r, k) + "</td>").join("") + "</tr>").join("") + "</tbody>";
+}
+$("#table").addEventListener("click", (e) => {
+  const th = e.target.closest("th");
+  if (th) { const k = th.dataset.k; S.table.dir = S.table.sort === k ? -S.table.dir : -1; S.table.sort = k; renderTable(); return; }
+  const tr = e.target.closest("tr[data-key]");
+  if (tr) openDetail(tr.dataset.key);
+});
+
+// ---------------------------------------------------------------- détail d'un cycle
+async function samplesOf(key) {
+  if (S.sampleCache.has(key)) return S.sampleCache.get(key);
+  const f = S.files.get(key);
+  let m;
+  if (f) {
+    m = await pool.run(f, true);
+    if (!m.ok) throw new Error(m.error);
+  } else if (S.db.has(key)) {
+    m = await base.samples(S.db.get(key), S.cycles.get(key));
+  } else return null;
+  S.sampleCache.set(key, m);
+  if (S.sampleCache.size > 8) S.sampleCache.delete(S.sampleCache.keys().next().value);
+  return m;
+}
+function openDetail(key, add = false) {
+  if (add) { if (!S.detail.includes(key)) S.detail.push(key); if (S.detail.length > 3) S.detail.splice(1, 1); }
+  else S.detail = [key];
+  setTab("cycle");
+}
+let comparing = false;
+async function renderDetail() {
+  const list = $("#cycle-list");
+  list.innerHTML = S.filtered.slice(0, 3000).map((r) => '<option value="' + esc(r.source_file) + '">').join("");
+  if (!S.detail.length && S.filtered.length) S.detail = [S.filtered[S.filtered.length - 1].key];
+  S.detail = S.detail.filter((k) => S.cycles.has(k));
+  const body = $("#cycle-body");
+  const T = theme();
+  const main = S.cycles.get(S.detail[0]);
+  $("#cycle-search").value = comparing ? "" : main?.source_file || "";
+  $("#cycle-search").placeholder = comparing ? "Cycle à superposer…" : "Nom de fichier…";
+  $("#cycle-chips").innerHTML = S.detail.length > 1 ? S.detail.map((k, i) =>
+    '<span class="chip"><span class="sw" style="background:' + T.series[i] + '"></span>' + esc(S.cycles.get(k).source_file) +
+    (i ? '<button data-rm="' + esc(k) + '" title="Retirer">✕</button>' : "") + "</span>").join("") : "";
+  if (!main) { body.innerHTML = '<div class="notice">Aucun cycle sélectionné.</div>'; return; }
+  const row = S.rows.find((r) => r.key === main.key) || main;
+  const facts = [
+    ["Date", row.started_at?.replace("T", " ")], ["Résultat", row.cycle_ok === "OK" ? '<span class="badge ok"><span class="dot"></span>OK</span>' : row.cycle_ok === "NOK" ? '<span class="badge nok"><span class="dot"></span>NOK</span>' : "—"],
+    ["Tête", esc(row.head_name) + " · " + esc(row.head_uid)], ["Boîtier", esc(row.box_sn)], ["Programme", esc(row.programme)],
+    ["Temps de cycle", nf(row.cycle_time_s, 2) + " s"], ["Distance", nf(row.distance_mm, 2) + " mm"],
+    ["Compteur local 1", nf(row.head_local_counter_1, 0)], ["Couple max", nf(row.couple_max_a, 2) + " A"], ["Énergie", nf(row.energie_kj, 2) + " kJ"],
+    ...S.joinCols.filter((c) => row[c] != null && c !== "layer_thicknesses_mm").map((c) => [label(c), esc(typeof row[c] === "number" ? nf(row[c], 4) : row[c])]),
+  ];
+  body.innerHTML = '<div class="facts">' + facts.map(([l, v]) => "<div><span>" + esc(l) + "</span><b>" + (v ?? "—") + "</b></div>").join("") + "</div>" +
+    '<div class="tile full"><div class="plot" id="cycle-plot" style="height:620px"><div class="empty">Lecture des mesures…</div></div></div>' +
+    '<div id="cycle-steps" style="margin-top:12px"></div>';
+  let data;
+  try { data = await Promise.all(S.detail.map(samplesOf)); }
+  catch (err) { $("#cycle-plot").innerHTML = '<div class="empty">Lecture impossible : ' + esc(err.message) + "</div>"; return; }
+  if (!data[0]) {
+    $("#cycle-plot").innerHTML = '<div class="empty">Les courbes ont besoin du fichier d\'origine.<br>Les résumés sont gardés d\'une visite à l\'autre, pas les fichiers : redéposez <b>' + esc(main.source_file) + "</b> (ou son dossier) pour voir ses mesures.</div>";
+    return;
+  }
+  const useT = $("#cycle-x").value === "t";
+  const panels = [["tq", "Couple (A)"], ["th", "Poussée (A)"], [useT ? "pos" : "pw", useT ? "Position (mm)" : "Puissance (W)"]];
+  const traces = [];
+  const single = data.filter(Boolean).length === 1;
+  data.forEach((d, i) => {
+    if (!d) return;
+    const s = d.samples, n = s.tq.length;
+    const x = useT ? Array.from({ length: n }, (_, j) => j / d.rate) : Array.from(s.pos);
+    const name = single ? null : S.cycles.get(S.detail[i]).source_file;
+    panels.forEach(([k, lbl], p) => {
+      traces.push({
+        type: "scattergl", mode: "lines", x, y: Array.from(s[k]), xaxis: "x", yaxis: p ? "y" + (p + 1) : "y",
+        name: name ?? lbl, legendgroup: "c" + i, showlegend: !single && p === 0,
+        line: { color: T.series[i], width: 1.5 },
+        hovertemplate: "%{y:.3f}<extra>" + esc(name ? name.slice(0, 32) : lbl) + "</extra>",
+      });
+      if (single && (k === "tq" || k === "th")) {
+        traces.push({
+          type: "scattergl", mode: "lines", x, y: Array.from(k === "tq" ? s.tqe : s.the), xaxis: "x", yaxis: p ? "y" + (p + 1) : "y",
+          name: "À vide", showlegend: false, line: { color: T.muted, width: 1.5, dash: "dot" },
+          hovertemplate: "%{y:.3f}<extra>à vide</extra>",
+        });
+      }
+    });
+  });
+  const L = baseLayout({ hovermode: "x unified", margin: { l: 56, r: 12, t: single ? 16 : 34, b: 44 }, showlegend: !single });
+  const doms = [[0.70, 1], [0.37, 0.65], [0, 0.32]];
+  panels.forEach(([, lbl], p) => {
+    const ax = { ...L.yaxis, tickfont: { ...L.yaxis.tickfont }, domain: doms[p], title: { text: lbl, font: { color: T.text2, size: 12 } } };
+    L[p ? "yaxis" + (p + 1) : "yaxis"] = ax;
+  });
+  L.xaxis = { ...L.xaxis, anchor: "y3", title: { text: useT ? "Temps (s)" : "Position (mm)", font: { color: T.text2, size: 12 } } };
+  // bandes d'étapes du premier cycle (axe temps uniquement)
+  if (useT) {
+    const s = data[0].samples, rate = data[0].rate, shapes = [], ann = [];
+    let start = 0;
+    for (let j = 1; j <= s.step.length; j++) {
+      if (j === s.step.length || s.step[j] !== s.step[start]) {
+        const st = s.step[start];
+        if (st > 0) {
+          if (st % 2 === 1) shapes.push({ type: "rect", xref: "x", yref: "paper", x0: start / rate, x1: j / rate, y0: 0, y1: 1, fillcolor: T.band, line: { width: 0 }, layer: "below" });
+          ann.push({ xref: "x", yref: "paper", x: (start + j) / 2 / rate, y: 1, yanchor: "bottom", text: "Étape " + st, showarrow: false, font: { size: 11, color: T.muted } });
+        }
+        start = j;
+      }
+    }
+    L.shapes = shapes;
+    L.annotations = single ? ann : [];
+  }
+  $("#cycle-plot").innerHTML = "";
+  Plotly.react("cycle-plot", traces, L, PCONF);
+
+  const st = data[0].steps, pg = data[0].program;
+  const tbl = (t, title) => !t.header.length ? "" : "<h3 style=\"font-size:14px;margin:14px 0 6px\">" + title + '</h3><div class="tablewrap"><table class="data"><thead><tr>' +
+    t.header.map((h) => '<th class="num">' + esc(h) + "</th>").join("") + "</tr></thead><tbody>" +
+    t.rows.map((r) => "<tr>" + r.map((c) => '<td class="num">' + esc(c) + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>";
+  $("#cycle-steps").innerHTML = tbl(st, "Résultats par étape") + tbl(pg, "Programme");
+}
+function pickCycle(value) {
+  const r = S.rows.find((x) => x.source_file === value);
+  if (!r) return;
+  if (comparing) { comparing = false; openDetail(r.key, true); } else openDetail(r.key);
+}
+$("#cycle-search").addEventListener("change", (e) => pickCycle(e.target.value.trim()));
+$("#cycle-x").addEventListener("change", renderDetail);
+$("#cycle-compare").addEventListener("click", () => { comparing = true; renderDetail(); $("#cycle-search").focus(); });
+$("#cycle-chips").addEventListener("click", (e) => {
+  const k = e.target.dataset.rm; if (!k) return;
+  S.detail = S.detail.filter((x) => x !== k); renderDetail();
+});
+function step(dirn) {
+  const i = S.filtered.findIndex((r) => r.key === S.detail[0]);
+  const j = i < 0 ? 0 : i + dirn;
+  if (j >= 0 && j < S.filtered.length) openDetail(S.filtered[j].key);
+}
+$("#cycle-prev").addEventListener("click", () => step(-1));
+$("#cycle-next").addEventListener("click", () => step(1));
+
+// ---------------------------------------------------------------- navigation et rendu
+function setTab(tab) {
+  S.tab = tab;
+  document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+  setTabVisibility();
+  renderCurrent();
+}
+$("#tabs").addEventListener("click", (e) => { const t = e.target.closest("button")?.dataset.tab; if (t) setTab(t); });
+document.querySelectorAll("[data-goto]").forEach((b) => (b.onclick = () => setTab(b.dataset.goto)));
+function renderCurrent() {
+  if (S.tab === "depot") { depot.render(); if (!depot.journalLoaded) depot.loadJournal(); return; }
+  if (!S.rows.length) return;
+  if (S.tab === "dash") { renderKpis(); renderDash(); }
+  if (S.tab === "cycle") renderDetail();
+  if (S.tab === "data") renderTable();
+}
+function refresh(rebuild = true) {
+  if (rebuild) buildRows();
+  const has = S.rows.length > 0;
+  setTabVisibility();
+  applyFilters();
+  renderFilters();
+  $("#status").textContent = has ? nf(S.rows.length, 0) + " cycle(s) · " + nf(S.filtered.length, 0) + " dans la sélection" : "";
+  const errs = $("#errors");
+  errs.hidden = !S.errors.length;
+  if (S.errors.length) {
+    $("summary", errs).textContent = S.errors.length + " fichier(s) non lu(s)";
+    $("ul", errs).innerHTML = S.errors.slice(-200).map((e) => "<li>" + esc(e) + "</li>").join("");
+  }
+  renderCurrent();
+}
+// Les onglets restent visibles même base vide : le dépôt doit rester accessible.
+function setTabVisibility() {
+  const has = S.rows.length > 0, depotTab = S.tab === "depot";
+  $("#tabs").hidden = false;
+  $("#filters").hidden = !has || depotTab;
+  $("#empty").hidden = has || depotTab;
+  $("#tab-depot").hidden = !depotTab;
+  $("#tab-dash").hidden = !has || S.tab !== "dash";
+  $("#tab-cycle").hidden = !has || S.tab !== "cycle";
+  $("#tab-data").hidden = !has || S.tab !== "data";
+}
+
+// ---------------------------------------------------------------- actions
+$("#btn-add-files").onclick = () => $("#in-files").click();
+$("#btn-add-folder").onclick = () => $("#in-folder").click();
+document.querySelectorAll("[data-pick]").forEach((b) => (b.onclick = () => $(b.dataset.pick === "folder" ? "#in-folder" : "#in-files").click()));
+$("#in-files").onchange = (e) => { ingest(e.target.files); e.target.value = ""; };
+$("#in-folder").onchange = (e) => { ingest(e.target.files); e.target.value = ""; };
+let dragDepth = 0;
+addEventListener("dragenter", (e) => { if (e.dataTransfer?.types?.includes("Files")) { dragDepth++; document.body.classList.add("dragging"); } });
+addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dragging"); } });
+addEventListener("dragover", (e) => e.preventDefault());
+addEventListener("drop", async (e) => {
+  e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging");
+  if (e.dataTransfer) ingest(await filesFromDrop(e.dataTransfer));
+});
+$("#btn-clear").onclick = async () => {
+  if (!confirm("Oublier tous les cycles chargés et les colonnes jointes ? (Rien n'est supprimé en base ; la disposition des graphiques est conservée.)")) return;
+  S.cycles.clear(); S.files.clear(); S.db.clear(); S.joins.clear(); S.joinCols = []; S.errors = []; S.detail = []; S.sampleCache.clear();
+  S.filters = {}; S.dateFrom = S.dateTo = "";
+  await idb.clear(); refresh();
+};
+$("#btn-export").onclick = () => {
+  if (!S.filtered.length) return toast("Aucun cycle à exporter");
+  const cols = ["source_file", "started_at", ...Object.keys(S.fields).filter((k) => !["source_file", "started_at"].includes(k)).sort((a, b) => order(a) - order(b))];
+  const cellOf = (v) => {
+    if (v == null) return "";
+    if (typeof v === "number") return String(v).replace(".", ",");
+    const s = String(v);
+    return /[;"\n]/.test(s) ? '"' + s.replaceAll('"', '""') + '"' : s;
+  };
+  const csv = "﻿" + [cols.join(";"), ...S.filtered.map((r) => cols.map((k) => cellOf(r[k])).join(";"))].join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "cycles_" + new Date().toISOString().slice(0, 10) + ".csv";
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$("#btn-new-tile").onclick = () => editTile(-1);
+$("#btn-dash-reset").onclick = () => { if (confirm("Remplacer vos graphiques par la disposition par défaut ?")) { S.tiles = structuredClone(DEFAULT_TILES); saveTiles(); renderDash(); } };
+$("#btn-dash-export").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ version: 1, tiles: S.tiles }, null, 2)], { type: "application/json" }));
+  a.download = "disposition_tableau_de_bord.json"; a.click();
+};
+$("#btn-dash-import").onclick = () => $("#in-dash").click();
+$("#in-dash").onchange = async (e) => {
+  try {
+    const j = JSON.parse(await e.target.files[0].text());
+    if (!Array.isArray(j.tiles)) throw new Error();
+    S.tiles = j.tiles; saveTiles(); renderDash(); toast(j.tiles.length + " graphique(s) importé(s)");
+  } catch { toast("Fichier de disposition illisible"); }
+  e.target.value = "";
+};
+const THEMES = ["auto", "light", "dark"];
+function applyTheme(t) {
+  if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
+  $("#btn-theme").title = "Thème : " + { auto: "automatique", light: "clair", dark: "sombre" }[t];
+  S.colorMaps = {};
+}
+$("#btn-theme").onclick = () => {
+  const t = THEMES[(THEMES.indexOf(store.get("theme", "auto")) + 1) % 3];
+  store.set("theme", t); applyTheme(t); renderCurrent();
+};
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { S.colorMaps = {}; renderCurrent(); });
+
+// ---------------------------------------------------------------- base Supabase
+// Projet à lire : URL et clé publique (publishable / anon), faites pour être visibles
+// dans le navigateur. Les données restent protégées par la connexion et les règles
+// RLS de la base (compte présent dans utilisateur_autorise).
+// Sur Netlify, elles viennent des variables d'environnement SUPABASE_URL et SUPABASE_KEY,
+// écrites dans config.js au build. Sans build (glisser-déposer), les écrire ci-dessous.
+const CONFIG = window.SUPABASE_CONFIG || {};
+const SUPABASE_URL = CONFIG.url || "";   // ex. https://abcdefghij.supabase.co
+const SUPABASE_KEY = CONFIG.key || "";   // Project Settings > API Keys : clé publishable (sb_publishable_…) ou anon
+// Lien d'un e-mail Supabase (invitation, réinitialisation) : le type est lu avant que le
+// client ne consomme le fragment de l'adresse pour ouvrir la session.
+const LINK = (() => {
+  const h = new URLSearchParams(location.hash.slice(1));
+  return { type: h.get("type"), error: h.get("error_description") };
+})();
+const sb = window.supabase && SUPABASE_URL && SUPABASE_KEY ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+const base = {
+  PAGE: 1000,   // plafond de lignes par requête de l'API Supabase
+  // Pages [0, n) lues par paquets de 4 requêtes en parallèle.
+  async pages(n, fetchPage, onProgress) {
+    const out = new Array(n);
+    let next = 0, done = 0;
+    await Promise.all(Array.from({ length: Math.min(4, n) }, async () => {
+      while (next < n) {
+        const i = next++;
+        out[i] = await fetchPage(i);
+        done++; onProgress && onProgress(done, n);
+      }
+    }));
+    return out.flat();
+  },
+  async check(q) {
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  // Même forme de résumé que parse() dans le worker, pour que tableaux de bord,
+  // filtres, export CSV et jointure de vérité terrain fonctionnent à l'identique.
+  summary(v) {
+    const fin = (x) => (x == null || !Number.isFinite(Number(x)) ? null : Math.round(Number(x) * 1000) / 1000);
+    const r = {
+      source_file: v.source_file || "cycle " + v.db_id,
+      started_at: v.started_at,
+      jour: v.started_at.slice(0, 10),
+      heure: Number(v.started_at.slice(11, 13)),
+      cycle_id: v.cycle_id,
+      origine: v.is_synthetic ? "Synthétique" : "Réel",
+      box_sn: v.box_sn, box_name: v.box_name, firmware: v.firmware,
+      motor_name: v.motor_name, head_name: v.head_name, head_uid: v.head_uid, head_type: v.head_type,
+      head_global_counter: v.head_global_counter, head_local_counter_1: v.head_local_counter_1,
+      head_local_counter_2: v.head_local_counter_2,
+      programme: v.pset_nb == null ? null : "Pset " + v.pset_nb + (v.pset_version == null ? "" : " v" + v.pset_version),
+      pset_nb: v.pset_nb == null ? null : "Pset " + v.pset_nb,
+      cycle_time_s: fin(v.cycle_time_s), distance_mm: fin(v.distance_mm),
+      cycle_ok: v.cycle_ok === true ? "OK" : v.cycle_ok === false ? "NOK" : null,
+      nb_etapes: (v.etapes || []).length,
+      nb_mesures: v.nb_mesures,
+      duree_mesures_s: v.nb_mesures == null ? null : fin(v.nb_mesures / v.sample_rate_hz),
+      couple_max_a: fin(v.couple_max_a), couple_moy_a: fin(v.couple_moy_a),
+      poussee_max_a: fin(v.poussee_max_a), poussee_moy_a: fin(v.poussee_moy_a),
+      puissance_max_w: fin(v.puissance_max_w), energie_kj: fin(v.energie_kj),
+      course_mm: fin(v.course_mm), gap_max_mm: fin(v.gap_max_mm), stop_code_max: v.stop_code_max,
+    };
+    for (const e of v.etapes || []) {
+      for (const k of ["duree_s", "stop_code", "m1_max_a", "m2_max_a", "distance_m2", "couple_moy_a", "poussee_moy_a", "couple_max_a"]) {
+        r["e" + e.n + "_" + k] = k === "stop_code" ? e[k] : fin(e[k]);
+      }
+    }
+    r.key = (r.box_sn || "?") + "|" + (r.cycle_id ?? r.source_file);
+    return r;
+  },
+  async loadCycles() {
+    const bar = $("#progress"), fill = bar.firstElementChild;
+    bar.hidden = false; fill.style.width = "0%";
+    $("#status").textContent = "Lecture de la base…";
+    const t0 = performance.now();
+    try {
+      const page = (i) => this.check(sb.from("v_cycle_resume").select("*").order("db_id").range(i * this.PAGE, (i + 1) * this.PAGE - 1));
+      const progress = (d, total) => {
+        if (total) fill.style.width = (100 * d / total) + "%";
+        $("#status").textContent = "Lecture de la base " + nf(Math.min(d * this.PAGE, total || Infinity), 0) + (total ? " / " + nf(total, 0) : "") + "…";
+      };
+      const { data: first, error, count } = await sb.from("v_cycle_resume").select("*", { count: "exact" }).order("db_id").range(0, this.PAGE - 1);
+      if (error) throw new Error(error.message);
+      let all = first;
+      if (first.length === this.PAGE) {
+        if (count != null) {
+          // nombre total connu : pages restantes en parallèle
+          const n = Math.ceil(count / this.PAGE);
+          all = first.concat(await this.pages(n - 1, (i) => page(i + 1), (d) => progress(d + 1, count)));
+        } else {
+          // en-tête Content-Range absent (proxy) : page après page jusqu'à une page incomplète
+          for (let i = 1, got = first; got.length === this.PAGE; i++) {
+            got = await page(i); all = all.concat(got); progress(i + 1, null);
+          }
+        }
+      }
+      for (const v of all) {
+        const r = this.summary(v);
+        S.cycles.set(r.key, r);
+        S.db.set(r.key, { id: v.db_id, rate: v.sample_rate_hz });
+      }
+      toast(nf(all.length, 0) + " cycle(s) lu(s) en base en " + ((performance.now() - t0) / 1000).toFixed(1) + " s");
+    } catch (err) {
+      toast("Lecture de la base impossible : " + err.message);
+    } finally {
+      bar.hidden = true;
+      refresh();
+    }
+  },
+  // Mesures, étapes et programme d'un cycle, au format rendu par le worker.
+  async samples({ id, rate }, row) {
+    const cols = "position_mm,i_torque_a,i_thrust_a,i_torque_empty_a,i_thrust_empty_a,step_nb,stop_code,torque_power_w,gap_length_mm";
+    const n = Math.max(1, Math.ceil((row?.nb_mesures || this.PAGE) / this.PAGE));
+    const [rows, steps, cyc] = await Promise.all([
+      this.pages(n, (i) => this.check(sb.from("cycle_sample").select(cols).eq("cycle_id", id).order("sample_idx").range(i * this.PAGE, (i + 1) * this.PAGE - 1))),
+      this.check(sb.from("cycle_step_result").select("*").eq("cycle_id", id).order("step_nb")),
+      this.check(sb.from("cycle").select("program_id").eq("id", id).single()),
+    ]);
+    const prog = cyc.program_id == null ? [] :
+      await this.check(sb.from("program_step").select("*").eq("program_id", cyc.program_id).order("step_nb"));
+    const map = { pos: "position_mm", tq: "i_torque_a", th: "i_thrust_a", tqe: "i_torque_empty_a", the: "i_thrust_empty_a", step: "step_nb", stop: "stop_code", pw: "torque_power_w", gap: "gap_length_mm" };
+    const samples = {};
+    for (const [k, c] of Object.entries(map)) samples[k] = Float32Array.from(rows, (x) => x[c] ?? NaN);
+    const asTable = (list, drop) => {
+      if (!list.length) return { header: [], rows: [] };
+      const header = Object.keys(list[0]).filter((k) => !drop.includes(k));
+      return { header, rows: list.map((x) => header.map((k) => (x[k] == null ? "" : String(x[k])))) };
+    };
+    return {
+      ok: true, summary: row, rate, samples,
+      steps: asTable(steps, ["cycle_id", "extra"]),
+      program: asTable(prog, ["program_id", "extra"]),
+    };
+  },
+};
+
+// ---------------------------------------------------------------- connexion
+// Connexion uniquement : aucun formulaire d'inscription. Les comptes sont créés par
+// l'administrateur (e-mail ajouté à utilisateur_autorise, puis Authentication > Users).
+const auth = {
+  showError(msg) { const e = $("#auth-err"); e.textContent = msg; e.hidden = !msg; },
+  async check() {
+    if (!sb) {
+      this.showError(!SUPABASE_URL || !SUPABASE_KEY
+        ? "Page non configurée : config.js absent. Sur Netlify, définir SUPABASE_URL et SUPABASE_KEY puis relancer un déploiement avec build (pas un glisser-déposer)."
+        : "La bibliothèque de connexion (Supabase, cdn.jsdelivr.net) n'a pas pu être chargée : vérifiez la connexion ou le proxy.");
+      $("#auth-submit").disabled = true;
+      return;
+    }
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      if (LINK.error) this.showError("Lien invalide ou expiré (" + LINK.error.replaceAll("+", " ") + "). Demandez un nouvel e-mail à l'administrateur.");
+      return;
+    }
+    if (LINK.type === "invite" || LINK.type === "recovery") {
+      history.replaceState(null, "", location.pathname + location.search);
+      $("#auth-form").hidden = true;
+      $("#pwd-form").hidden = false;
+      $("#pwd-intro").textContent = (LINK.type === "invite" ? "Bienvenue " : "Compte ") + session.user.email +
+        ". Ce mot de passe servira à vos prochaines connexions.";
+      LINK.type = null;
+      return;
+    }
+    const { data: ok, error } = await sb.rpc("est_autorise");
+    if (error || ok !== true) {
+      $("#auth-intro").textContent = "Le compte " + session.user.email + " n'est pas autorisé sur ce projet.";
+      $("#auth-form").querySelectorAll("label, #auth-submit").forEach((el) => (el.hidden = true));
+      $("#auth-out").hidden = false;
+      if (error) this.showError("Vérification impossible : " + error.message);
+      return;
+    }
+    $("#who").textContent = session.user.email;
+    document.body.classList.remove("locked");
+    start();
+  },
+};
+$("#auth-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const btn = $("#auth-submit");
+  btn.disabled = true; btn.textContent = "Connexion…"; auth.showError("");
+  const { error } = await sb.auth.signInWithPassword({ email: f.get("email"), password: f.get("password") });
+  btn.disabled = false; btn.textContent = "Se connecter";
+  if (error) {
+    return auth.showError(error.message === "Invalid login credentials" ? "E-mail ou mot de passe incorrect." : "Connexion impossible : " + error.message);
+  }
+  auth.check();
+});
+$("#pwd-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target), err = $("#pwd-err");
+  const show = (m) => { err.textContent = m; err.hidden = !m; };
+  if (f.get("password") !== f.get("confirm")) return show("Les deux mots de passe ne sont pas identiques.");
+  const btn = $("#pwd-submit");
+  btn.disabled = true; show("");
+  const { error } = await sb.auth.updateUser({ password: f.get("password") });
+  btn.disabled = false;
+  if (error) return show("Mot de passe refusé : " + error.message);
+  $("#pwd-form").hidden = true;
+  $("#auth-form").hidden = false;
+  toast("Mot de passe enregistré");
+  auth.check();
+});
+async function logout() {
+  await sb.auth.signOut();
+  location.reload();   // vide la mémoire de la page (cycles lus en base, mesures en cache)
+}
+$("#auth-out").onclick = logout;
+$("#btn-logout").onclick = logout;
+$("#btn-reload-db").onclick = () => base.loadCycles();
+if (sb) sb.auth.onAuthStateChange((event) => { if (event === "SIGNED_OUT" && !document.body.classList.contains("locked")) location.reload(); });
+
+// ---------------------------------------------------------------- démarrage
+async function start() {
+  if (start.done) return;
+  start.done = true;
+  S.tiles = store.get("tiles.v1", null) || structuredClone(DEFAULT_TILES);
+  if (typeof Plotly === "undefined") {
+    document.body.insertAdjacentHTML("afterbegin", '<div class="notice" style="margin:12px">La bibliothèque de graphiques (Plotly, cdn.jsdelivr.net) n\'a pas pu être chargée : vérifiez la connexion ou le proxy.</div>');
+  }
+  // Les cycles viennent de la base ; seules les colonnes jointes (.csv) sont gardées
+  // sur le poste. Les résumés locaux d'avant le dépôt en base sont oubliés.
+  const saved = await idb.load();
+  if (saved.joins) { S.joins = new Map(saved.joins.rows); S.joinCols = saved.joins.cols || []; }
+  if (saved.cycles.length) idb.tx("cycles", "readwrite", (s) => s.clear()).catch(() => {});
+  refresh();
+  await base.loadCycles();
+}
+applyTheme(store.get("theme", "auto"));
+auth.check();
+</script>
+</body>
+</html>

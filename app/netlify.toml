@@ -1,0 +1,30 @@
+# Build du site : génère config.js à partir des variables d'environnement Netlify
+# (SUPABASE_URL, SUPABASE_KEY). Lancé à chaque push sur main (le netlify.toml racine
+# fixe base = "app") ; un glisser-déposer du dossier ne lancerait pas de build.
+[build]
+  command = "node build-config.js"
+  publish = "."
+
+# L'URL et la clé publishable/anon sont publiques par nature : config.js les sert exprès.
+# Netlify les a marquées « secrètes » et bloquerait le build en les y trouvant.
+# Les autres variables (clé secrète…) restent recherchées dans les fichiers publiés.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,SUPABASE_KEY,SUPABASE_ANON_PUBLIC_KEY"
+
+# Les outils de build n'ont rien à faire en ligne.
+[[redirects]]
+  from = "/build-config.js"
+  to = "/"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/netlify.toml"
+  to = "/"
+  status = 404
+  force = true
+
+[[headers]]
+  for = "/config.js"
+  [headers.values]
+    Cache-Control = "no-cache"

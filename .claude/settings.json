@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./04 Qualification Outils Coupants/**)",
+      "Edit(./04 Qualification Outils Coupants/**)",
+      "Write(./04 Qualification Outils Coupants/**)",
+      "Read(./04 Qualification Outils Coupants)",
+      "Edit(./.claude/**)",
+      "Write(./.claude/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/bloquer-dossier-interdit.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
